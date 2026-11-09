@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  :root {
+    --fondo: #F4F1EC; --tarjeta: #FFFFFF; --texto: #2E3236; --suave: #7B7F84; --linea: #E5DFD5;
+    --acento: #5F6F7E; --acento-claro: #E4E9EE; --arena: #EFE7DA; --ok: #6E9C7C; --ok-claro: #E2EEE5;
+    --alerta: #B9826C; --alerta-claro: #F4E5DE; --sombra: 0 1px 2px rgba(46,50,54,.06), 0 4px 14px rgba(46,50,54,.06);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--fondo); }
+  body { margin: 0; background: var(--fondo); color: var(--texto); font: 15px/1.45 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .app { max-width: 640px; margin: 0 auto; padding: 16px 16px 80px; }
+  h1 { font: 600 23px/1.2 Georgia, "Times New Roman", serif; margin: 0; }
+  h2 { font-size: 12px; letter-spacing: .13em; text-transform: uppercase; color: var(--suave); margin: 22px 0 10px; font-weight: 600; }
+  .sub { color: var(--suave); font-size: 13px; }
+  .marca { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+  .logo { width: 40px; height: 40px; border-radius: 50%; background: var(--acento); color: #fff; display: flex; align-items: center; justify-content: center; font: 600 18px Georgia, serif; flex: 0 0 40px; }
+  .tarjeta { background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 14px; padding: 14px; box-shadow: var(--sombra); }
+  .opc { display: grid; gap: 8px; }
+  .opc button, .chips button, .horas button { appearance: none; font: inherit; cursor: pointer; border: 1px solid var(--linea); background: var(--tarjeta); color: var(--texto); border-radius: 12px; }
+  .opc button { display: flex; justify-content: space-between; align-items: center; padding: 13px 14px; text-align: left; }
+  .opc button.on, .chips button.on, .horas button.on { border-color: var(--acento); background: var(--acento); color: #fff; }
+  .opc button.on .sub { color: #DDE3E8; }
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .chips button { padding: 8px 13px; white-space: nowrap; border-radius: 999px; }
+  .horas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .horas button { padding: 10px 0; font-weight: 600; }
+  label { display: block; font-size: 12px; color: var(--suave); margin: 10px 0 4px; }
+  input, select { width: 100%; font: inherit; padding: 11px; border: 1px solid var(--linea); border-radius: 10px; background: #FDFCFA; color: var(--texto); }
+  .btn { appearance: none; border: 0; border-radius: 12px; padding: 13px 14px; font: inherit; font-weight: 600; cursor: pointer; background: var(--acento); color: #fff; text-decoration: none; display: block; text-align: center; width: 100%; }
+  .btn.sec { background: var(--arena); color: var(--texto); }
+  .btn.ok { background: var(--ok); }
+  .btn.peligro { background: var(--alerta-claro); color: #8A4F3A; }
+  .btn:disabled { opacity: .55; }
+  .chip { display: inline-block; font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--arena); color: #6B5B43; white-space: nowrap; }
+  .chip.ok { background: var(--ok-claro); color: #3F6B4C; } .chip.alerta { background: var(--alerta-claro); color: #8A4F3A; } .chip.azul { background: var(--acento-claro); color: #44525F; }
+  .vacio { text-align: center; color: var(--suave); padding: 22px 0; }
+  .cargando { text-align: center; color: var(--suave); padding: 60px 0; }
+  .fila { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .resumen .tarjeta { padding: 10px; text-align: center; }
+  .resumen b { display: block; font: 600 19px Georgia, serif; }
+  .resumen span { font-size: 11px; color: var(--suave); text-transform: uppercase; letter-spacing: .08em; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { padding: 7px 4px; border-bottom: 1px solid var(--linea); text-align: left; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--suave); font-weight: 600; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  .cita { margin-bottom: 8px; }
+  .cita .hora { font: 600 20px Georgia, serif; min-width: 62px; }
+  .acc { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+  .acc .btn { padding: 9px 4px; font-size: 13px; }
+  .confirm { text-align: center; }
+  .confirm .grande { font: 600 30px Georgia, serif; margin: 6px 0; }
+  .aviso { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--texto); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; display: none; z-index: 9; max-width: 90%; }
+  .pin { max-width: 320px; margin: 60px auto; text-align: center; }
+  .pin input { text-align: center; font-size: 24px; letter-spacing: .4em; margin: 14px 0; }
+  .link { background: transparent; border: 0; color: var(--suave); font: inherit; padding: 8px 0; cursor: pointer; }
+  .gris { opacity: .55; }
+</style>
+<script>
+/* ===== Conexion con tu Apps Script: pega aqui tu link /exec ===== */
+var URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbxuBTWvEuc3JVEIIpWQMparnITUxFNRbT4S83e0Ei2k3Rb_fLnNk6GgfkTstv3h5jsQNg/exec';
+
+(function () {
+  function parametros() {
+    var q = {};
+    location.search.replace(/^\?/, '').split('&').forEach(function (p) {
+      if (!p) return;
+      var kv = p.split('=');
+      q[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || '').replace(/\+/g, ' '));
+    });
+    return q;
+  }
+  function nuevaLlamada() {
+    var ok = function () {}, ko = function () {};
+    var obj = {
+      withSuccessHandler: function (f) { ok = f; return obj; },
+      withFailureHandler: function (f) { ko = f; return obj; }
+    };
+    ['api_inicio', 'api_horarios', 'api_reservar', 'api_miCita', 'api_cancelarCliente', 'api_entrar', 'api_agenda', 'api_marcar', 'api_eliminar', 'api_nuevaManual'].forEach(function (fn) {
+      obj[fn] = function () {
+        var args = Array.prototype.slice.call(arguments);
+        fetch(URL_APPS_SCRIPT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ fn: fn, args: args, base: location.origin + location.pathname })
+        }).then(function (r) { return r.json(); }).then(function (j) {
+          if (j.e) ko(new Error(j.e)); else ok(j.r);
+        }).catch(function () { ko(new Error('Sin conexión con el servidor. Revisa tu internet.')); });
+      };
+    });
+    return obj;
+  }
+  var script = { url: { getLocation: function (cb) { cb({ parameter: parametros() }); } } };
+  Object.defineProperty(script, 'run', { get: nuevaLlamada });
+  window.google = { script: script };
+})();
+</script>
+<title>Citas</title>
+</head>
+<body>
+<div class="app" id="app"><div class="cargando">Cargando…</div></div>
+<div class="aviso" id="aviso"></div>
+
+<script>
+var P = {};
+var D = null;   // datos del negocio (servicios, barberos, dias)
+var R = { servicio: '', barbero: '', fecha: '', hora: '', horas: [] };   // reserva en curso
+var A = { pin: '', fecha: '', agenda: null };                            // panel
+
+/* ---------- utilidades ---------- */
+function $(id) { return document.getElementById(id); }
+function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function dinero(n) { return '$' + Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 }); }
+function aviso(t) { var a = $('aviso'); a.textContent = t; a.style.display = 'block'; clearTimeout(aviso.t); aviso.t = setTimeout(function () { a.style.display = 'none'; }, 2800); }
+function llamar(fn, args, ok, fallo) {
+  var r = google.script.run.withSuccessHandler(ok).withFailureHandler(function (e) {
+    var m = e && e.message ? e.message : String(e); aviso(m); if (fallo) fallo(m);
+  });
+  r[fn].apply(r, args);
+}
+function guardarLocal(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function leerLocal(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+function cabecera(sub) {
+  return '<div class="marca"><div class="logo">' + esc(D.nombre.charAt(0)) + '</div><div><h1>' + esc(D.nombre) + '</h1><div class="sub">' + esc(sub) + '</div></div></div>';
+}
+function claseEstado(e) { return e === 'Atendida' ? 'ok' : (e === 'Cancelada' || e === 'No vino' ? 'alerta' : 'azul'); }
+
+/* =========================================================
+   CLIENTE: apartar cita
+   ========================================================= */
+function iniciarReserva() {
+  llamar('api_inicio', [], function (d) { D = d; R.fecha = d.dias.length ? d.dias[0].fecha : ''; pintarReserva(); },
+    function (m) { $('app').innerHTML = '<div class="vacio">' + esc(m) + '</div>'; });
+}
+function pintarReserva() {
+  var h = cabecera('Aparta tu cita en menos de un minuto');
+  h += '<h2>1 · Servicio</h2><div class="opc">';
+  D.servicios.forEach(function (s, i) {
+    h += '<button class="' + (R.servicio === s.nombre ? 'on' : '') + '" onclick="elegirServicio(' + i + ')"><span><b>' + esc(s.nombre) + '</b><br><span class="sub">' + s.duracion + ' min</span></span><b>' + dinero(s.precio) + '</b></button>';
+  });
+  h += '</div>';
+  if (R.servicio) {
+    h += '<h2>2 · Barbero</h2><div class="chips"><button class="' + (R.barbero === '' ? 'on' : '') + '" onclick="elegirBarbero(-1)">El que esté libre</button>';
+    D.barberos.forEach(function (b, i) { h += '<button class="' + (R.barbero === b ? 'on' : '') + '" onclick="elegirBarbero(' + i + ')">' + esc(b) + '</button>'; });
+    h += '</div><h2>3 · Día</h2><div class="chips">';
+    D.dias.forEach(function (d, i) { h += '<button class="' + (R.fecha === d.fecha ? 'on' : '') + '" onclick="elegirDia(' + i + ')">' + esc(d.texto) + '</button>'; });
+    h += '</div><h2>4 · Hora</h2><div id="horas"><div class="vacio">Buscando horarios…</div></div>';
+    h += '<div id="datos"></div>';
+  }
+  h += '<div style="text-align:center;margin-top:30px"><a class="sub" href="?panel=1" style="text-decoration:none">Soy de la barbería &#8250;</a></div>';
+  $('app').innerHTML = h;
+  if (R.servicio) cargarHoras();
+}
+function elegirServicio(i) { R.servicio = D.servicios[i].nombre; R.hora = ''; pintarReserva(); }
+function elegirBarbero(i) { R.barbero = i < 0 ? '' : D.barberos[i]; R.hora = ''; pintarReserva(); }
+function elegirDia(i) { R.fecha = D.dias[i].fecha; R.hora = ''; pintarReserva(); }
+function cargarHoras() {
+  var pedido = R.fecha + R.servicio + R.barbero;
+  llamar('api_horarios', [R.fecha, R.servicio, R.barbero], function (lista) {
+    if (pedido !== R.fecha + R.servicio + R.barbero) return;
+    R.horas = lista;
+    if (!lista.length) { $('horas').innerHTML = '<div class="vacio">Ya no hay lugar este día. Prueba otro día u otro barbero.</div>'; return; }
+    var h = '<div class="horas">';
+    lista.forEach(function (x, i) { h += '<button class="' + (R.hora === x.hora ? 'on' : '') + '" onclick="elegirHora(' + i + ')">' + esc(x.hora) + '</button>'; });
+    $('horas').innerHTML = h + '</div>';
+    if (R.hora) pintarDatos();
+  });
+}
+function elegirHora(i) {
+  R.hora = R.horas[i].hora;
+  var bs = document.querySelectorAll('.horas button');
+  for (var k = 0; k < bs.length; k++) bs[k].className = k === i ? 'on' : '';
+  pintarDatos();
+}
+function pintarDatos() {
+  var x = R.horas.filter(function (z) { return z.hora === R.hora; })[0];
+  $('datos').innerHTML = '<h2>5 · Tus datos</h2><div class="tarjeta">' +
+    '<div class="sub">' + esc(R.servicio) + ' · ' + esc(R.hora) + (x ? ' · con ' + esc(x.barbero) : '') + '</div>' +
+    '<label>Tu nombre</label><input id="r_nom" value="' + esc(leerLocal('cli_nom')) + '">' +
+    '<label>Tu WhatsApp (10 dígitos)</label><input id="r_tel" inputmode="tel" value="' + esc(leerLocal('cli_tel')) + '">' +
+    '<button class="btn" id="b_res" style="margin-top:14px" onclick="reservar()">Apartar cita</button></div>';
+  $('datos').scrollIntoView({ behavior: 'smooth' });
+}
+function reservar() {
+  var nom = $('r_nom').value.trim(), tel = $('r_tel').value.replace(/\D/g, '');
+  if (!nom) { aviso('Escribe tu nombre'); return; }
+  if (tel.length < 10) { aviso('Escribe tu WhatsApp a 10 dígitos'); return; }
+  guardarLocal('cli_nom', nom); guardarLocal('cli_tel', tel);
+  $('b_res').disabled = true;
+  llamar('api_reservar', [{ servicio: R.servicio, barbero: R.barbero, fecha: R.fecha, hora: R.hora, cliente: nom, telefono: tel }], function (c) {
+    pintarMiCita(c, true);
+  }, function () { $('b_res').disabled = false; R.hora = ''; cargarHoras(); });
+}
+
+/* ---------- CLIENTE: ver / cancelar su cita ---------- */
+function iniciarMiCita() {
+  llamar('api_miCita', [P.c, P.k], function (c) { pintarMiCita(c, false); },
+    function (m) { $('app').innerHTML = '<div class="vacio">' + esc(m) + '</div>'; });
+}
+function pintarMiCita(c, nueva) {
+  D = D || { nombre: c.nombre };
+  var cancelada = c.estado === 'Cancelada';
+  var h = cabecera(nueva ? '¡Listo! Tu cita quedó apartada' : 'Tu cita');
+  h += '<div class="tarjeta confirm" style="margin-top:14px"><span class="chip ' + claseEstado(c.estado) + '">' + esc(c.estado) + '</span>' +
+    '<div class="grande' + (cancelada ? ' gris' : '') + '">' + esc(c.hora) + '</div><div><b>' + esc(c.fechaTexto) + '</b></div>' +
+    '<div class="sub" style="margin-top:4px">' + esc(c.servicio) + ' · con ' + esc(c.barbero) + ' · ' + dinero(c.precio) + '</div>' +
+    '<div class="sub" style="margin-top:4px">Folio ' + esc(c.folio) + '</div></div>';
+  if (!cancelada && c.estado === 'Apartada') {
+    h += '<p class="sub" style="text-align:center">Guarda esta página: desde aquí puedes ver o cancelar tu cita.</p>' +
+      '<a class="btn ok" href="' + esc(c.waNegocio) + '" target="_blank">Confirmar por WhatsApp</a>' +
+      '<button class="btn peligro" style="margin-top:8px" id="b_can" onclick="cancelarMiCita(\'' + esc(c.folio) + '\',\'' + esc(c.clave) + '\')">Cancelar cita</button>';
+    if (nueva) try { history.replaceState(null, '', c.link.indexOf(location.origin) === 0 ? c.link : location.href); } catch (e) {}
+  }
+  h += '<button class="btn sec" style="margin-top:8px" onclick="location.href=location.pathname">Apartar otra cita</button>';
+  $('app').innerHTML = h;
+}
+function cancelarMiCita(f, k) {
+  if (!confirm('¿Seguro que quieres cancelar tu cita?')) return;
+  $('b_can').disabled = true;
+  llamar('api_cancelarCliente', [f, k], function (c) { pintarMiCita(c, false); aviso('Cita cancelada'); }, function () { $('b_can').disabled = false; });
+}
+
+/* =========================================================
+   BARBERIA: agenda y corte de caja
+   ========================================================= */
+function iniciarPanel() { var p = leerLocal('barb_pin'); if (p) entrar(p, true); else pantallaPin(''); }
+function pantallaPin(msg) {
+  $('app').innerHTML = '<div class="pin tarjeta"><div class="logo" style="margin:0 auto 10px">B</div><h1>Agenda</h1><div class="sub">Solo para la barbería</div>' +
+    '<input id="pin" type="password" inputmode="numeric" placeholder="PIN"><button class="btn" id="bpin" onclick="entrar($(\'pin\').value)">Entrar</button>' +
+    (msg ? '<div class="sub" style="margin-top:10px;color:#8A4F3A">' + esc(msg) + '</div>' : '') + '</div>';
+  $('pin').onkeydown = function (e) { if (e.key === 'Enter') entrar($('pin').value); };
+}
+function entrar(pin, auto) {
+  if ($('bpin')) $('bpin').disabled = true;
+  google.script.run.withSuccessHandler(function (d) {
+    A.pin = pin; guardarLocal('barb_pin', pin); D = d; A.agenda = d.agenda; A.fecha = d.agenda.fecha; pintarPanel();
+  }).withFailureHandler(function (e) {
+    guardarLocal('barb_pin', ''); pantallaPin(auto ? '' : (e && e.message ? e.message : 'No se pudo entrar'));
+  }).api_entrar(pin);
+}
+function verDia(f) {
+  A.fecha = f;
+  llamar('api_agenda', [A.pin, f], function (ag) { A.agenda = ag; pintarPanel(); });
+}
+function pintarPanel() {
+  var ag = A.agenda;
+  var h = cabecera('Agenda · ' + ag.fechaTexto);
+  h += '<div class="chips" style="margin:10px 0 14px">';
+  D.dias.forEach(function (d) { h += '<button class="' + (A.fecha === d.fecha ? 'on' : '') + '" onclick="verDia(\'' + d.fecha + '\')">' + esc(d.texto) + '</button>'; });
+  h += '<button onclick="verDia(A.fecha)">&#8635;</button></div>';
+
+  h += '<div class="resumen"><div class="tarjeta"><b>' + dinero(ag.total) + '</b><span>Venta del día</span></div>' +
+    '<div class="tarjeta"><b>' + dinero(ag.efectivo) + '</b><span>Efectivo</span></div>' +
+    '<div class="tarjeta"><b>' + dinero(ag.transferencia) + '</b><span>Transfer.</span></div></div>';
+
+  h += '<h2>Corte de caja por barbero</h2><div class="tarjeta"><table><tr><th>Barbero</th><th class="n">Cortes</th><th class="n">Venta</th><th class="n">Comisión</th></tr>';
+  ag.barberos.forEach(function (b) {
+    h += '<tr><td>' + esc(b.nombre) + '</td><td class="n">' + b.cortes + '</td><td class="n">' + dinero(b.venta) + '</td><td class="n"><b>' + dinero(b.comision) + '</b></td></tr>';
+  });
+  h += '</table></div>';
+
+  h += '<div class="fila"><h2>Citas (' + ag.citas.filter(function (c) { return c.estado !== 'Cancelada'; }).length + ')</h2><button class="link" onclick="formPaso()">+ Cliente de paso</button></div><div id="paso"></div>';
+  if (!ag.citas.length) h += '<div class="vacio">Sin citas este día.</div>';
+  ag.citas.forEach(function (c) {
+    var fuera = c.estado === 'Cancelada' || c.estado === 'No vino';
+    h += '<div class="tarjeta cita' + (fuera ? ' gris' : '') + '"><div class="fila"><div class="fila" style="justify-content:flex-start;gap:12px"><div class="hora">' + esc(c.hora) + '</div>' +
+      '<div><b>' + esc(c.cliente) + '</b><div class="sub">' + esc(c.servicio) + ' · ' + esc(c.barbero) + ' · ' + dinero(c.precio) + '</div></div></div>' +
+      '<span class="chip ' + claseEstado(c.estado) + '">' + esc(c.estado === 'Atendida' ? 'Pagó ' + c.pago.toLowerCase() : c.estado) + '</span></div>';
+    if (c.estado === 'Apartada') {
+      h += '<div class="acc"><button class="btn ok" onclick="marcar(\'' + c.folio + '\',\'Atendida\',\'Efectivo\')">Efectivo</button>' +
+        '<button class="btn ok" onclick="marcar(\'' + c.folio + '\',\'Atendida\',\'Transferencia\')">Transfer.</button>' +
+        '<button class="btn peligro" onclick="marcar(\'' + c.folio + '\',\'No vino\',\'\')">No vino</button>' +
+        '<a class="btn sec" href="' + esc(c.wa) + '" target="_blank">Recordar</a></div>';
+    } else {
+      h += '<button class="link" onclick="marcar(\'' + c.folio + '\',\'Apartada\',\'\')">Deshacer</button>';
+    }
+    h += '<button class="link" style="float:right;color:#8A4F3A" onclick="eliminar(\'' + c.folio + '\',\'' + esc(c.cliente) + '\')">Eliminar</button>';
+    h += '</div>';
+  });
+  h += '<button class="link" onclick="guardarLocal(\'barb_pin\',\'\');pantallaPin(\'\')">Cerrar sesión</button>';
+  $('app').innerHTML = h;
+}
+function marcar(folio, estado, pago) {
+  var bs = document.querySelectorAll('.acc .btn'); for (var i = 0; i < bs.length; i++) bs[i].disabled = true;
+  llamar('api_marcar', [A.pin, folio, estado, pago, A.fecha], function (ag) {
+    A.agenda = ag; pintarPanel();
+    aviso(estado === 'Atendida' ? 'Cobrado en ' + pago.toLowerCase() : (estado === 'Apartada' ? 'Listo, se deshizo' : estado));
+  }, function () { pintarPanel(); });
+}
+function eliminar(folio, cliente) {
+  var nip = prompt('Para eliminar la cita ' + folio + ' de ' + cliente + ' escribe el NIP. No se puede deshacer.');
+  if (nip === null || nip === '') return;
+  llamar('api_eliminar', [nip, folio, A.fecha], function (ag) { A.agenda = ag; pintarPanel(); aviso('Cita eliminada'); });
+}
+function formPaso() {
+  var d = new Date(), m = d.getHours() * 60 + d.getMinutes(); m = m - (m % 30);
+  var hh = (m / 60 < 10 ? '0' : '') + Math.floor(m / 60) + ':' + (m % 60 < 10 ? '0' : '') + (m % 60);
+  var h = '<div class="tarjeta" style="margin-bottom:10px"><label>Servicio</label><select id="p_ser">';
+  D.servicios.forEach(function (s) { h += '<option>' + esc(s.nombre) + '</option>'; });
+  h += '</select><label>Barbero</label><select id="p_bar">';
+  D.barberos.forEach(function (b) { h += '<option>' + esc(b) + '</option>'; });
+  h += '</select><label>Hora</label><input id="p_hora" type="time" value="' + hh + '"><label>Nombre (opcional)</label><input id="p_nom">' +
+    '<button class="btn" id="b_paso" style="margin-top:12px" onclick="guardarPaso()">Agregar a la agenda</button></div>';
+  $('paso').innerHTML = h;
+}
+function guardarPaso() {
+  $('b_paso').disabled = true;
+  llamar('api_nuevaManual', [A.pin, { fecha: A.fecha, hora: $('p_hora').value, servicio: $('p_ser').value, barbero: $('p_bar').value, cliente: $('p_nom').value || 'Cliente de paso' }],
+    function (ag) { A.agenda = ag; pintarPanel(); aviso('Agregado'); }, function () { $('b_paso').disabled = false; });
+}
+
+/* ---------- arranque ---------- */
+window.onerror = function (m) { $('app').innerHTML = '<div class="vacio">Ocurrió un error: ' + esc(m) + '</div>'; };
+function arrancar(p) {
+  P = p || {};
+  if (P.panel) iniciarPanel();
+  else if (P.c) iniciarMiCita();
+  else iniciarReserva();
+}
+if (window.google && google.script && google.script.url) google.script.url.getLocation(function (l) { arrancar(l.parameter); });
+else arrancar({});
+</script>
+</body>
+</html>

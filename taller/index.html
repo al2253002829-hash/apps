@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  :root {
+    --fondo: #F5F2EC; --tarjeta: #FFFFFF; --texto: #2F3437; --suave: #7A7F83; --linea: #E6E0D5;
+    --acento: #6F8F80; --acento-claro: #E3ECE6; --arena: #D8C8AE; --arena-claro: #F1EADF;
+    --azul: #8197AE; --azul-claro: #E5EBF1; --ok: #6E9C7C; --ok-claro: #E2EEE5;
+    --alerta: #C0876F; --alerta-claro: #F5E6DF; --sombra: 0 1px 2px rgba(47,52,55,.06), 0 4px 14px rgba(47,52,55,.06);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--fondo); }
+  body { margin: 0; background: var(--fondo); color: var(--texto); font: 15px/1.45 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .app { max-width: 720px; margin: 0 auto; padding: 16px 16px 90px; }
+  h1 { font: 600 22px/1.2 Georgia, "Times New Roman", serif; margin: 0; }
+  h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--suave); margin: 22px 0 10px; font-weight: 600; }
+  .cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .sub { color: var(--suave); font-size: 13px; }
+  .tarjeta { background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 14px; padding: 14px; box-shadow: var(--sombra); }
+  .lista .tarjeta { margin-bottom: 10px; cursor: pointer; }
+  .fila { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .chip { display: inline-block; font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--arena-claro); color: #6B5B43; white-space: nowrap; }
+  .chip.azul { background: var(--azul-claro); color: #4A5E73; }
+  .chip.ok { background: var(--ok-claro); color: #3F6B4C; }
+  .chip.alerta { background: var(--alerta-claro); color: #8A4F3A; }
+  .chip.verde { background: var(--acento-claro); color: #476456; }
+  button, .btn { appearance: none; border: 0; border-radius: 10px; padding: 11px 14px; font: inherit; font-weight: 600; cursor: pointer; background: var(--acento); color: #fff; text-decoration: none; display: inline-block; text-align: center; }
+  button.sec, .btn.sec { background: var(--arena-claro); color: var(--texto); }
+  button.peligro { background: var(--alerta-claro); color: #8A4F3A; }
+  button:disabled { opacity: .55; cursor: default; }
+  .ancho { width: 100%; }
+  label { display: block; font-size: 12px; color: var(--suave); margin: 10px 0 4px; }
+  input, select, textarea { width: 100%; font: inherit; padding: 10px 11px; border: 1px solid var(--linea); border-radius: 10px; background: #FDFCFA; color: var(--texto); }
+  textarea { min-height: 70px; resize: vertical; }
+  .rej { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  .filtros { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; }
+  .filtros button { background: var(--tarjeta); color: var(--texto); border: 1px solid var(--linea); font-weight: 500; padding: 7px 12px; }
+  .filtros button.on { background: var(--texto); color: #fff; border-color: var(--texto); }
+  .pasos { list-style: none; margin: 0; padding: 0; }
+  .pasos li { display: flex; gap: 12px; position: relative; padding-bottom: 16px; }
+  .pasos li:before { content: ""; position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: var(--linea); }
+  .pasos li:last-child:before { display: none; }
+  .pasos .pt { flex: 0 0 24px; height: 24px; border-radius: 50%; border: 2px solid var(--linea); background: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #fff; z-index: 1; }
+  .pasos li.hecho .pt { background: var(--ok); border-color: var(--ok); }
+  .pasos li.hecho:before { background: var(--ok); }
+  .pasos li.actual .pt { background: #fff; border-color: var(--acento); box-shadow: 0 0 0 4px var(--acento-claro); }
+  .pasos .nom { font-weight: 600; }
+  .pasos li.pend .nom { color: #B3B0AA; font-weight: 500; }
+  .pasos .hora { font-size: 12px; color: var(--suave); }
+  .barra { height: 8px; background: var(--linea); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+  .barra i { display: block; height: 100%; background: var(--acento); border-radius: 99px; transition: width .6s; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { padding: 8px 4px; border-bottom: 1px solid var(--linea); text-align: left; vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--suave); font-weight: 600; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  .tot td { border: 0; padding: 3px 4px; }
+  .grande { font: 600 26px/1.1 Georgia, serif; }
+  .conc { display: grid; grid-template-columns: 1fr 64px 92px 32px; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .conc input { padding: 8px; }
+  .x { background: transparent; color: var(--suave); padding: 4px; font-size: 18px; }
+  .acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .estados { display: flex; flex-wrap: wrap; gap: 6px; }
+  .estados button { background: var(--tarjeta); color: var(--texto); border: 1px solid var(--linea); font-weight: 500; padding: 8px 11px; }
+  .estados button.on { background: var(--acento); color: #fff; border-color: var(--acento); }
+  .aviso { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--texto); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; display: none; z-index: 9; max-width: 90%; }
+  .cargando { text-align: center; color: var(--suave); padding: 50px 0; }
+  .vacio { text-align: center; color: var(--suave); padding: 30px 0; }
+  .logo { width: 38px; height: 38px; border-radius: 10px; background: var(--acento); color: #fff; display: flex; align-items: center; justify-content: center; font: 600 18px Georgia, serif; flex: 0 0 38px; }
+  .marca { display: flex; gap: 10px; align-items: center; }
+  .wa { background: #5E9C76; }
+  .caja-link { display: none; margin-top: 10px; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .kpis .tarjeta { padding: 10px; text-align: center; }
+  .kpis b { display: block; font: 600 22px Georgia, serif; }
+  .kpis span { font-size: 11px; color: var(--suave); text-transform: uppercase; letter-spacing: .08em; }
+  .pin { max-width: 320px; margin: 60px auto; text-align: center; }
+  .pin input { text-align: center; font-size: 24px; letter-spacing: .4em; margin: 14px 0; }
+  .resp { text-align: center; padding: 6px 0; }
+  .volver { background: transparent; color: var(--suave); padding: 6px 0; font-weight: 500; }
+</style>
+<script>
+/* ===== Conexion con tu Apps Script (pega aqui tu link /exec) ===== */
+var URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbwZJg7aur0KeT5SbdniiBDKXzgexMeYgPAxPEDH6xLKbSWV7khRigQMS0r20P-61VIH/exec';
+
+(function () {
+  function parametros() {
+    var q = {};
+    location.search.replace(/^\?/, '').split('&').forEach(function (p) {
+      if (!p) return;
+      var kv = p.split('=');
+      q[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || '').replace(/\+/g, ' '));
+    });
+    return q;
+  }
+  function nuevaLlamada() {
+    var ok = function () {}, ko = function () {};
+    var obj = {
+      withSuccessHandler: function (f) { ok = f; return obj; },
+      withFailureHandler: function (f) { ko = f; return obj; }
+    };
+    ['api_publico', 'api_entrar', 'api_listar', 'api_crear', 'api_orden', 'api_presupuesto',
+     'api_estado', 'api_notas', 'api_cliente', 'api_responder'].forEach(function (fn) {
+      obj[fn] = function () {
+        var args = Array.prototype.slice.call(arguments);
+        fetch(URL_APPS_SCRIPT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ fn: fn, args: args, base: location.origin + location.pathname })
+        }).then(function (r) { return r.json(); }).then(function (j) {
+          if (j.e) ko(new Error(j.e)); else ok(j.r);
+        }).catch(function () { ko(new Error('Sin conexión con el servidor. Revisa tu internet.')); });
+      };
+    });
+    return obj;
+  }
+  var script = { url: { getLocation: function (cb) { cb({ parameter: parametros() }); } } };
+  Object.defineProperty(script, 'run', { get: nuevaLlamada });
+  window.google = { script: script };
+})();
+</script>
+<title>Taller</title>
+</head>
+<body>
+<div class="app" id="app"><div class="cargando">Cargando…</div></div>
+<div class="aviso" id="aviso"></div>
+
+<script>
+var INICIO = { modo: 'taller', folio: '', clave: '', taller: 'Taller' };
+var S = { pin: '', ajustes: null, catalogo: [], ordenes: [], filtro: 'activas', orden: null, conceptos: [], vista: 'lista' };
+var FILTROS = { activas: 'Activas', listos: 'Listos', todas: 'Todas' };
+
+/* ---------- utilidades ---------- */
+function $(id) { return document.getElementById(id); }
+function esc(v) {
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function dinero(n) {
+  var m = (S.ajustes && S.ajustes.moneda) || 'MXN';
+  return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + m;
+}
+function aviso(t) {
+  var a = $('aviso'); a.textContent = t; a.style.display = 'block';
+  clearTimeout(aviso.t); aviso.t = setTimeout(function () { a.style.display = 'none'; }, 2600);
+}
+function llamar(fn, args, ok, fallo) {
+  var r = google.script.run.withSuccessHandler(ok).withFailureHandler(function (e) {
+    var msg = (e && e.message) ? e.message : String(e);
+    aviso(msg);
+    if (fallo) fallo(msg);
+  });
+  r[fn].apply(r, args);
+}
+function guardarLocal(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function leerLocal(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+function claseEstado(e) {
+  if (e === 'Listo' || e === 'Entregado') return 'ok';
+  if (e === 'Esperando pieza') return 'alerta';
+  if (e === 'Recibido') return '';
+  return 'azul';
+}
+function clasePres(p) {
+  if (p === 'Autorizado') return 'ok';
+  if (p === 'Rechazado') return 'alerta';
+  if (p === 'Enviado') return 'azul';
+  return '';
+}
+function avance(estado, estados) {
+  var i = estados.indexOf(estado);
+  var ultimo = estados.indexOf('Listo');
+  if (ultimo < 0) ultimo = estados.length - 1;
+  return Math.max(5, Math.min(100, Math.round((i / ultimo) * 100)));
+}
+function pasosHtml(o, estados, textos) {
+  var pos = estados.indexOf(o.estado);
+  var horas = {};
+  (o.historial || []).forEach(function (h) { horas[h.estado] = h.fecha; });
+  var h = '<ul class="pasos">';
+  estados.forEach(function (e, i) {
+    if (e === 'Esperando pieza' && !horas[e] && pos !== i) return;
+    var cls = i < pos ? 'hecho' : (i === pos ? (e === 'Entregado' || e === 'Listo' ? 'hecho' : 'actual') : 'pend');
+    h += '<li class="' + cls + '"><div class="pt">' + (cls === 'hecho' ? '&#10003;' : '') + '</div><div>' +
+      '<div class="nom">' + esc(e) + '</div>' +
+      '<div class="hora">' + (horas[e] ? esc(horas[e]) : (i === pos ? '' : '')) + (i === pos && textos[e] ? (horas[e] ? ' · ' : '') + esc(textos[e]) : '') + '</div>' +
+      '</div></li>';
+  });
+  return h + '</ul>';
+}
+function tablaConceptos(lista, o) {
+  var h = '<table><tr><th>Concepto</th><th class="n">Cant.</th><th class="n">Importe</th></tr>';
+  lista.forEach(function (c) {
+    h += '<tr><td>' + esc(c.concepto) + '</td><td class="n">' + esc(c.cantidad) + '</td><td class="n">' + dinero(c.importe) + '</td></tr>';
+  });
+  h += '</table><table class="tot" style="margin-top:8px">' +
+    '<tr><td class="sub">Subtotal</td><td class="n sub">' + dinero(o.subtotal) + '</td></tr>' +
+    (o.iva ? '<tr><td class="sub">IVA</td><td class="n sub">' + dinero(o.iva) + '</td></tr>' : '') +
+    '<tr><td><b>Total</b></td><td class="n grande">' + dinero(o.total) + '</td></tr></table>';
+  return h;
+}
+
+/* =========================================================
+   VISTA DEL CLIENTE
+   ========================================================= */
+function iniciarCliente() {
+  llamar('api_cliente', [INICIO.folio, INICIO.clave], pintarCliente, function (m) {
+    $('app').innerHTML = '<div class="vacio">' + esc(m) + '</div>';
+  });
+  setInterval(function () {
+    if (document.hidden) return;
+    google.script.run.withSuccessHandler(pintarCliente).api_cliente(INICIO.folio, INICIO.clave);
+  }, 45000);
+}
+function pintarCliente(o) {
+  S.ajustes = o.ajustes;
+  var a = o.ajustes;
+  var h = '<div class="cab"><div class="marca"><div class="logo">' + esc(a.taller.charAt(0)) + '</div><div><h1>' + esc(a.taller) + '</h1>' +
+    '<div class="sub">Orden ' + esc(o.folio) + '</div></div></div></div>';
+
+  h += '<div class="tarjeta"><div class="fila"><div><b>' + esc(o.vehiculo) + '</b><div class="sub">' + esc(o.placas) + (o.km ? ' · ' + esc(o.km) + ' km' : '') + '</div></div>' +
+    '<span class="chip ' + claseEstado(o.estado) + '">' + esc(o.estado) + '</span></div>' +
+    (o.falla ? '<div class="sub" style="margin-top:8px">Motivo: ' + esc(o.falla) + '</div>' : '') +
+    '<div class="barra"><i style="width:' + avance(o.estado, a.estados) + '%"></i></div>' +
+    '<div class="fila sub"><span>' + avance(o.estado, a.estados) + '% completado</span><span>' + (o.entrega ? 'Entrega estimada: ' + esc(o.entrega) : '') + '</span></div></div>';
+
+  if (o.conceptos && o.conceptos.length) {
+    h += '<h2>Presupuesto</h2><div class="tarjeta">' + tablaConceptos(o.conceptos, o);
+    if (o.presupuesto === 'Enviado') {
+      h += '<div class="acciones"><button class="peligro" onclick="responder(false)">Rechazar</button><button onclick="responder(true)">Autorizar</button></div>';
+    } else {
+      h += '<div class="resp"><span class="chip ' + clasePres(o.presupuesto) + '">' + (o.presupuesto === 'Autorizado' ? '&#10003; Autorizado' : esc(o.presupuesto)) + '</span>' +
+        (o.respuesta ? '<div class="sub" style="margin-top:6px">' + esc(o.respuesta) + '</div>' : '') + '</div>';
+    }
+    h += '</div>';
+  }
+
+  h += '<h2>Seguimiento</h2><div class="tarjeta">' + pasosHtml(o, a.estados, a.estadosTexto) + '</div>';
+  h += '<p class="sub" style="text-align:center;margin-top:18px">Esta página se actualiza sola. No necesitas llamar.</p>';
+  h += '<a class="btn sec ancho" href="' + esc(a.waTaller) + '" target="_blank">Escribir al taller</a>';
+  $('app').innerHTML = h;
+}
+function responder(si) {
+  var txt = si ? '¿Autorizas el presupuesto? El taller empezará la reparación.' : '¿Seguro que quieres rechazar el presupuesto?';
+  if (!confirm(txt)) return;
+  var bs = document.querySelectorAll('.acciones button');
+  for (var i = 0; i < bs.length; i++) bs[i].disabled = true;
+  llamar('api_responder', [INICIO.folio, INICIO.clave, si], function (o) {
+    pintarCliente(o);
+    aviso(si ? 'Presupuesto autorizado. ¡Gracias!' : 'Listo, avisamos al taller.');
+  }, function () { for (var i = 0; i < bs.length; i++) bs[i].disabled = false; });
+}
+
+/* =========================================================
+   VISTA DEL TALLER
+   ========================================================= */
+function iniciarTaller() {
+  var p = leerLocal('taller_pin');
+  if (p) entrar(p, true); else pantallaPin();
+}
+function pantallaPin(msg) {
+  $('app').innerHTML = '<div class="pin tarjeta"><div class="logo" style="margin:0 auto 10px">' + esc(INICIO.taller.charAt(0)) + '</div>' +
+    '<h1>' + esc(INICIO.taller) + '</h1><div class="sub">Panel del taller</div>' +
+    '<input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">' +
+    '<button class="ancho" id="bpin" onclick="entrar($(\'pin\').value)">Entrar</button>' +
+    (msg ? '<div class="sub" style="margin-top:10px;color:#8A4F3A">' + esc(msg) + '</div>' : '') + '</div>';
+  var i = $('pin'); i.focus();
+  i.onkeydown = function (e) { if (e.key === 'Enter') entrar(i.value); };
+}
+function entrar(pin, auto) {
+  if (!auto && $('bpin')) $('bpin').disabled = true;
+  google.script.run.withSuccessHandler(function (r) {
+    S.pin = pin; guardarLocal('taller_pin', pin);
+    S.ajustes = r.ajustes; S.catalogo = r.catalogo; S.ordenes = r.ordenes;
+    pintarLista();
+  }).withFailureHandler(function (e) {
+    guardarLocal('taller_pin', '');
+    pantallaPin(auto ? '' : (e && e.message ? e.message : 'No se pudo entrar'));
+  }).api_entrar(pin);
+}
+function refrescarLista() {
+  llamar('api_listar', [S.pin], function (r) { S.ordenes = r; if (S.vista === 'lista') pintarLista(); });
+}
+function filtrar(f) { S.filtro = f; guardarLocal('taller_filtro', f); pintarLista(); }
+
+function pintarLista() {
+  S.vista = 'lista';
+  var activas = 0, listos = 0, porAutorizar = 0;
+  S.ordenes.forEach(function (o) {
+    if (o.estado !== 'Entregado') activas++;
+    if (o.estado === 'Listo') listos++;
+    if (o.presupuesto === 'Enviado') porAutorizar++;
+  });
+  var h = '<div class="cab"><div class="marca"><div class="logo">' + esc(S.ajustes.taller.charAt(0)) + '</div><div><h1>' + esc(S.ajustes.taller) + '</h1>' +
+    '<div class="sub">Órdenes de trabajo</div></div></div><button onclick="formNueva()">+ Nueva</button></div>';
+  h += '<div class="kpis"><div class="tarjeta"><b>' + activas + '</b><span>En taller</span></div>' +
+    '<div class="tarjeta"><b>' + porAutorizar + '</b><span>Por autorizar</span></div>' +
+    '<div class="tarjeta"><b>' + listos + '</b><span>Listos</span></div></div>';
+  h += '<div class="filtros">';
+  for (var k in FILTROS) h += '<button class="' + (S.filtro === k ? 'on' : '') + '" onclick="filtrar(\'' + k + '\')">' + FILTROS[k] + '</button>';
+  h += '<button onclick="refrescarLista()">&#8635; Actualizar</button></div><div class="lista">';
+  var vis = S.ordenes.filter(function (o) {
+    if (S.filtro === 'activas') return o.estado !== 'Entregado';
+    if (S.filtro === 'listos') return o.estado === 'Listo';
+    return true;
+  });
+  if (!vis.length) h += '<div class="vacio">No hay órdenes aquí todavía.</div>';
+  vis.forEach(function (o) {
+    h += '<div class="tarjeta" onclick="abrir(\'' + esc(o.folio) + '\')"><div class="fila"><div><b>' + esc(o.cliente) + '</b> <span class="sub">' + esc(o.folio) + '</span>' +
+      '<div class="sub">' + esc(o.vehiculo) + (o.placas ? ' · ' + esc(o.placas) : '') + (o.mecanico ? ' · ' + esc(o.mecanico) : '') + '</div></div>' +
+      '<div style="text-align:right"><span class="chip ' + claseEstado(o.estado) + '">' + esc(o.estado) + '</span>' +
+      '<div style="margin-top:4px"><span class="chip ' + clasePres(o.presupuesto) + '">' + esc(o.presupuesto) + '</span></div></div></div>' +
+      (o.urgencia === 'Alta' ? '<div style="margin-top:6px"><span class="chip alerta">Urgente</span></div>' : '') + '</div>';
+  });
+  h += '</div><button class="volver" onclick="salir()">Cerrar sesión</button>';
+  $('app').innerHTML = h;
+}
+function salir() { guardarLocal('taller_pin', ''); S.pin = ''; pantallaPin(); }
+
+function opciones(lista, sel) {
+  return lista.map(function (x) { return '<option' + (x === sel ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('');
+}
+function formNueva() {
+  S.vista = 'nueva';
+  var a = S.ajustes;
+  $('app').innerHTML = '<button class="volver" onclick="pintarLista()">&#8592; Órdenes</button><h1>Nueva orden</h1>' +
+    '<div class="tarjeta" style="margin-top:12px">' +
+    '<div class="rej"><div><label>Cliente *</label><input id="n_cliente"></div><div><label>WhatsApp (10 dígitos)</label><input id="n_tel" inputmode="tel"></div></div>' +
+    '<div class="rej"><div><label>Vehículo</label><input id="n_veh" placeholder="Ej. Aveo 2019"></div><div><label>Placas</label><input id="n_placas"></div></div>' +
+    '<div class="rej"><div><label>Kilometraje</label><input id="n_km" inputmode="numeric"></div><div><label>Urgencia</label><select id="n_urg">' + opciones(a.urgencias, a.urgencias[1]) + '</select></div></div>' +
+    '<label>¿Qué le pasa? (lo que dijo el cliente)</label><textarea id="n_falla" placeholder="Ej. Hace un ruido raro al frenar"></textarea>' +
+    '<label>Mecánico asignado</label><select id="n_mec"><option value="">Sin asignar</option>' + opciones(a.mecanicos) + '</select>' +
+    '<button class="ancho" id="b_crear" style="margin-top:14px" onclick="crear()">Crear orden</button></div>';
+  $('n_cliente').focus();
+}
+function crear() {
+  var d = { cliente: $('n_cliente').value, telefono: $('n_tel').value, vehiculo: $('n_veh').value, placas: $('n_placas').value,
+    km: $('n_km').value, urgencia: $('n_urg').value, falla: $('n_falla').value, mecanico: $('n_mec').value };
+  if (!d.cliente.trim()) { aviso('Escribe el nombre del cliente'); return; }
+  $('b_crear').disabled = true;
+  llamar('api_crear', [S.pin, d], function (folio) {
+    aviso('Orden ' + folio + ' creada');
+    S.ordenes.unshift({ folio: folio, cliente: d.cliente, vehiculo: d.vehiculo, placas: d.placas.toUpperCase(), estado: S.ajustes.estados[0], presupuesto: 'Sin presupuesto', urgencia: d.urgencia, mecanico: d.mecanico });
+    abrir(folio);
+  }, function () { $('b_crear').disabled = false; });
+}
+
+function abrir(folio) {
+  S.vista = 'orden';
+  $('app').innerHTML = '<div class="cargando">Abriendo ' + esc(folio) + '…</div>';
+  llamar('api_orden', [S.pin, folio], function (o) {
+    S.orden = o;
+    S.conceptos = o.conceptos.map(function (c) { return { tipo: c.tipo, concepto: c.concepto, cantidad: c.cantidad, precio: c.precio }; });
+    pintarOrden();
+  }, function () { pintarLista(); });
+}
+
+function pintarOrden() {
+  var o = S.orden, a = S.ajustes;
+  var bloqueado = o.presupuesto === 'Autorizado';
+  var h = '<button class="volver" onclick="refrescarLista();pintarLista()">&#8592; Órdenes</button>' +
+    '<div class="cab"><div><h1>' + esc(o.cliente) + '</h1><div class="sub">' + esc(o.folio) + ' · ' + esc(o.fecha) + '</div></div>' +
+    '<span id="chip_pres" class="chip ' + clasePres(o.presupuesto) + '">' + esc(o.presupuesto) + '</span></div>';
+
+  h += '<div class="tarjeta"><div class="fila"><div><b>' + esc(o.vehiculo) + '</b><div class="sub">' + esc(o.placas) + (o.km ? ' · ' + esc(o.km) + ' km' : '') +
+    (o.mecanico ? ' · ' + esc(o.mecanico) : '') + '</div></div>' + (o.urgencia === 'Alta' ? '<span class="chip alerta">Urgente</span>' : '<span class="chip">' + esc(o.urgencia) + '</span>') + '</div>' +
+    (o.falla ? '<div style="margin-top:8px">“' + esc(o.falla) + '”</div>' : '') + '</div>';
+
+  // Estado
+  h += '<h2>Estado</h2><div class="tarjeta"><div class="estados">';
+  a.estados.forEach(function (e) {
+    h += '<button class="' + (o.estado === e ? 'on' : '') + '" onclick="cambiarEstado(\'' + esc(e) + '\')">' + esc(e) + '</button>';
+  });
+  h += '</div><div class="caja-link" id="caja_estado"></div></div>';
+
+  // Presupuesto
+  h += '<h2>Presupuesto</h2><div class="tarjeta">';
+  if (bloqueado) {
+    h += tablaConceptos(o.conceptos, o) + '<div class="resp"><span class="chip ok">&#10003; Autorizado por el cliente</span><div class="sub" style="margin-top:6px">' + esc(o.respuesta) + '</div></div>';
+  } else {
+    if (o.presupuesto === 'Rechazado') h += '<div class="resp" style="margin-bottom:8px"><span class="chip alerta">El cliente lo rechazó</span> <span class="sub">Puedes ajustarlo y reenviarlo.</span></div>';
+    h += '<label>Agregar del catálogo</label><select id="p_cat" onchange="agregarCat()"><option value="">Elige un concepto…</option>';
+    S.catalogo.forEach(function (c, i) { h += '<option value="' + i + '">' + esc(c.concepto) + ' · ' + dinero(c.precio) + '</option>'; });
+    h += '</select><div style="margin:12px 0 4px" class="conc sub"><span>Concepto</span><span>Cant.</span><span>Precio</span><span></span></div><div id="p_lista"></div>' +
+      '<button class="sec" onclick="agregarLibre()">+ Concepto libre</button>' +
+      '<div id="p_tot" style="margin-top:10px"></div>' +
+      '<label>Entrega estimada</label><input id="p_ent" placeholder="Ej. Hoy 18:30" value="' + esc(o.entrega) + '">' +
+      '<div class="acciones"><button class="sec" id="b_guardar" onclick="guardarPres(false)">Guardar</button>' +
+      '<button class="wa" id="b_enviar" onclick="guardarPres(true)">' + (o.presupuesto === 'Enviado' || o.presupuesto === 'Rechazado' ? 'Reenviar' : 'Enviar') + ' por WhatsApp</button></div>' +
+      '<div class="caja-link" id="caja_pres"></div>';
+  }
+  h += '</div>';
+
+  // Seguimiento y link
+  h += '<h2>Lo que ve el cliente</h2><div class="tarjeta">' + pasosHtml(o, a.estados, a.estadosTexto) +
+    '<div class="acciones"><button class="sec" onclick="copiarLink()">Copiar link</button><a class="btn sec" href="' + esc(o.link) + '" target="_blank">Abrir vista</a></div></div>';
+
+  h += '<h2>Notas internas</h2><div class="tarjeta"><textarea id="notas" placeholder="Solo las ve el taller">' + esc(o.notas) + '</textarea>' +
+    '<button class="sec" style="margin-top:8px" onclick="guardarNotas()">Guardar notas</button></div>';
+
+  $('app').innerHTML = h;
+  if (!bloqueado) pintarConceptos();
+}
+
+function pintarConceptos() {
+  var h = '';
+  S.conceptos.forEach(function (c, i) {
+    h += '<div class="conc"><input value="' + esc(c.concepto) + '" oninput="editar(' + i + ',\'concepto\',this.value)">' +
+      '<input value="' + esc(c.cantidad) + '" inputmode="decimal" oninput="editar(' + i + ',\'cantidad\',this.value)">' +
+      '<input value="' + esc(c.precio) + '" inputmode="decimal" oninput="editar(' + i + ',\'precio\',this.value)">' +
+      '<button class="x" onclick="quitar(' + i + ')">&#215;</button></div>';
+  });
+  if (!S.conceptos.length) h = '<div class="sub" style="padding:6px 0 10px">Sin conceptos todavía.</div>';
+  $('p_lista').innerHTML = h;
+  totales();
+}
+function totales() {
+  var sub = 0;
+  S.conceptos.forEach(function (c) { sub += (Number(c.cantidad) || 0) * (Number(c.precio) || 0); });
+  var iva = Math.round(sub * S.ajustes.iva * 100) / 100;
+  $('p_tot').innerHTML = '<table class="tot"><tr><td class="sub">Subtotal</td><td class="n sub">' + dinero(sub) + '</td></tr>' +
+    (S.ajustes.iva ? '<tr><td class="sub">IVA ' + Math.round(S.ajustes.iva * 100) + '%</td><td class="n sub">' + dinero(iva) + '</td></tr>' : '') +
+    '<tr><td><b>Total</b></td><td class="n grande">' + dinero(sub + iva) + '</td></tr></table>';
+}
+function editar(i, k, v) { S.conceptos[i][k] = v; totales(); }
+function quitar(i) { S.conceptos.splice(i, 1); pintarConceptos(); }
+function agregarCat() {
+  var s = $('p_cat'); if (s.value === '') return;
+  var c = S.catalogo[Number(s.value)];
+  S.conceptos.push({ tipo: c.tipo, concepto: c.concepto, cantidad: 1, precio: c.precio });
+  s.value = ''; pintarConceptos();
+}
+function agregarLibre() { S.conceptos.push({ tipo: 'Otro', concepto: '', cantidad: 1, precio: 0 }); pintarConceptos(); }
+
+function mostrarWa(caja, wa, texto) {
+  var c = $(caja);
+  c.innerHTML = '<a class="btn wa ancho" href="' + esc(wa) + '" target="_blank">' + esc(texto) + '</a>';
+  c.style.display = 'block';
+}
+function guardarPres(enviar) {
+  var b1 = $('b_guardar'), b2 = $('b_enviar');
+  b1.disabled = true; b2.disabled = true;
+  llamar('api_presupuesto', [S.pin, S.orden.folio, S.conceptos, $('p_ent').value, enviar], function (r) {
+    b1.disabled = false; b2.disabled = false;
+    S.orden.entrega = $('p_ent').value;
+    if (enviar) {
+      S.orden.presupuesto = 'Enviado';
+      $('chip_pres').className = 'chip azul'; $('chip_pres').textContent = 'Enviado';
+      $('b_enviar').textContent = 'Reenviar por WhatsApp';
+      mostrarWa('caja_pres', r.wa, 'Abrir WhatsApp y mandar presupuesto');
+      aviso('Presupuesto listo para enviar');
+    } else {
+      aviso('Presupuesto guardado');
+    }
+  }, function () { b1.disabled = false; b2.disabled = false; });
+}
+function cambiarEstado(e) {
+  var anterior = S.orden.estado;
+  S.orden.estado = e;
+  var bs = document.querySelectorAll('.estados button');
+  for (var i = 0; i < bs.length; i++) bs[i].className = bs[i].textContent === e ? 'on' : '';
+  llamar('api_estado', [S.pin, S.orden.folio, e], function (r) {
+    aviso('Estado: ' + e);
+    mostrarWa('caja_estado', r.wa, 'Avisar al cliente por WhatsApp');
+    llamar('api_orden', [S.pin, S.orden.folio], function (o) {
+      S.orden = o; var caja = $('caja_estado').innerHTML;
+      var cons = S.conceptos; pintarOrden(); S.conceptos = cons; if ($('p_lista')) pintarConceptos();
+      $('caja_estado').innerHTML = caja; $('caja_estado').style.display = 'block';
+    });
+  }, function () { S.orden.estado = anterior; pintarOrden(); });
+}
+function guardarNotas() {
+  llamar('api_notas', [S.pin, S.orden.folio, $('notas').value], function () { aviso('Notas guardadas'); });
+}
+function copiarLink() {
+  var l = S.orden.link;
+  function respaldo() { prompt('Copia este link:', l); }
+  try {
+    navigator.clipboard.writeText(l).then(function () { aviso('Link copiado'); }, respaldo);
+  } catch (e) { respaldo(); }
+}
+
+/* ---------- arranque ---------- */
+window.onerror = function (m) {
+  $('app').innerHTML = '<div class="vacio">Ocurrió un error: ' + esc(m) + '</div>';
+};
+S.filtro = leerLocal('taller_filtro') || 'activas';
+function arrancar(p) {
+  p = p || {};
+  INICIO.folio = p.o || ''; INICIO.clave = p.k || '';
+  INICIO.modo = INICIO.folio ? 'cliente' : 'taller';
+  if (INICIO.modo === 'cliente') { iniciarCliente(); return; }
+  google.script.run.withSuccessHandler(function (r) {
+    INICIO.taller = r.taller; iniciarTaller();
+  }).withFailureHandler(function () { iniciarTaller(); }).api_publico();
+}
+if (window.google && google.script && google.script.url) {
+  google.script.url.getLocation(function (loc) { arrancar(loc.parameter); });
+} else {
+  arrancar({});
+}
+</script>
+</body>
+</html>
