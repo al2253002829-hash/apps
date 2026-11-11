@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  :root {
+    --fondo: #F5F2EA; --tarjeta: #FFFEFB; --texto: #34302A; --suave: #7F786B; --linea: #E8E2D4;
+    --oliva: #6E7B4E; --oliva-osc: #4F5A36; --oliva-claro: #E9ECDD;
+    --trigo: #E6D7B2; --trigo-claro: #F5EFDF; --trigo-t: #6E5A2E;
+    --tierra: #A47D5E; --tierra-claro: #F3E8DE; --tierra-t: #7A5338;
+    --cielo: #8BA1A9; --cielo-claro: #E6EDEF; --cielo-t: #46606A;
+    --rojo-claro: #F4E2DC; --rojo-t: #8B4436;
+    --sombra: 0 1px 2px rgba(52,48,42,.05), 0 6px 18px rgba(52,48,42,.06);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--fondo); }
+  body { margin: 0; background: var(--fondo); color: var(--texto); font: 15px/1.45 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .app { max-width: 780px; margin: 0 auto; padding: 0 16px 110px; }
+  h1 { font: 600 22px/1.15 "Iowan Old Style", Palatino, Georgia, serif; margin: 0; }
+  h2 { font: 600 16px/1.2 "Iowan Old Style", Palatino, Georgia, serif; margin: 24px 0 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  h2 small { font: 500 12px -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--suave); }
+  .banda { margin: 0 -16px 14px; padding: 18px 16px 16px; background: linear-gradient(160deg, #EFE6CF 0%, #E9EBDB 100%); border-bottom: 1px solid var(--linea); }
+  .banda .fila { align-items: flex-start; }
+  .banda .sub { color: #6C6655; }
+  .marca { display: flex; gap: 11px; align-items: center; min-width: 0; }
+  .logo { width: 42px; height: 42px; border-radius: 50%; background: var(--oliva); color: #FBF8EF; display: flex; align-items: center; justify-content: center; font-size: 21px; flex: 0 0 42px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.08); }
+  .sub { color: var(--suave); font-size: 13px; }
+  .tarjeta { background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 18px; padding: 15px; box-shadow: var(--sombra); }
+  .lista > .tarjeta { margin-bottom: 10px; }
+  .clic { cursor: pointer; }
+  .clic:active { transform: scale(.995); }
+  .fila { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .chip { display: inline-block; font-size: 12px; padding: 2px 10px; border-radius: 999px; background: var(--trigo-claro); color: var(--trigo-t); white-space: nowrap; margin: 3px 3px 0 0; }
+  .chip.oliva { background: var(--oliva-claro); color: var(--oliva-osc); }
+  .chip.tierra { background: var(--tierra-claro); color: var(--tierra-t); }
+  .chip.cielo { background: var(--cielo-claro); color: var(--cielo-t); }
+  .chip.rojo { background: var(--rojo-claro); color: var(--rojo-t); }
+  button, .btn { appearance: none; border: 0; border-radius: 12px; padding: 11px 15px; font: inherit; font-weight: 600; cursor: pointer; background: var(--oliva); color: #FBF8EF; text-decoration: none; display: inline-block; text-align: center; }
+  button.sec, .btn.sec { background: var(--trigo-claro); color: var(--texto); border: 1px solid var(--linea); }
+  button.chico, .btn.chico { padding: 7px 11px; font-size: 13px; border-radius: 10px; }
+  button:disabled { opacity: .55; cursor: default; }
+  .wa { background: #6A9A78; color: #fff; }
+  .ancho { width: 100%; }
+  .botones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .botones > * { flex: 1 1 140px; }
+  label { display: block; font-size: 12px; color: var(--suave); margin: 11px 0 4px; font-weight: 600; letter-spacing: .02em; }
+  input, select, textarea { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--linea); border-radius: 12px; background: #FDFBF6; color: var(--texto); }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--oliva-claro); border-color: var(--oliva); }
+  .rej { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  .seg { display: flex; background: var(--trigo-claro); border: 1px solid var(--linea); border-radius: 14px; padding: 4px; gap: 4px; margin-bottom: 12px; }
+  .seg button { flex: 1; background: transparent; color: var(--suave); padding: 9px 6px; font-size: 14px; border-radius: 10px; }
+  .seg button.on { background: var(--tarjeta); color: var(--texto); box-shadow: var(--sombra); }
+  .filtros { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 2px; }
+  .filtros button { background: var(--tarjeta); color: var(--texto); border: 1px solid var(--linea); font-weight: 500; padding: 7px 13px; white-space: nowrap; border-radius: 999px; font-size: 14px; }
+  .filtros button.on { background: var(--oliva); color: #FBF8EF; border-color: var(--oliva); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { padding: 8px 4px; border-bottom: 1px solid var(--linea); text-align: left; vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--suave); font-weight: 600; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  .tabla { overflow-x: auto; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+  .kpis.cuatro { grid-template-columns: repeat(2, 1fr); }
+  .kpis .tarjeta { padding: 12px 10px; }
+  .kpis b { display: block; font: 600 20px/1.2 "Iowan Old Style", Palatino, Georgia, serif; }
+  .kpis span { font-size: 11px; color: var(--suave); text-transform: uppercase; letter-spacing: .06em; }
+  .kpis .gan b { color: var(--oliva-osc); }
+  .kpis .neg b { color: var(--rojo-t); }
+  .aviso { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); background: var(--texto); color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 14px; display: none; z-index: 20; max-width: 90%; text-align: center; }
+  .cargando { text-align: center; color: var(--suave); padding: 60px 0; }
+  .vacio { text-align: center; color: var(--suave); padding: 24px 0; }
+  .pin { max-width: 330px; margin: 70px auto; text-align: center; }
+  .pin .logo { margin: 0 auto 12px; width: 56px; height: 56px; font-size: 28px; }
+  .pin input { text-align: center; font-size: 24px; letter-spacing: .4em; margin: 16px 0; }
+  .volver { background: transparent; color: var(--suave); padding: 6px 0; font-weight: 500; }
+  .nav { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); background: rgba(52,48,42,.94); border-radius: 22px; display: flex; z-index: 10; padding: 5px; gap: 2px; width: calc(100% - 24px); max-width: 520px; box-shadow: 0 8px 24px rgba(52,48,42,.22); }
+  .nav button { flex: 1; background: transparent; color: #CFC7B5; border-radius: 17px; padding: 7px 2px 8px; font-size: 11px; font-weight: 600; position: relative; }
+  .nav button i { display: block; font-style: normal; font-size: 18px; line-height: 1.25; }
+  .nav button.on { background: #F5EFDF; color: var(--texto); }
+  .nav .punto { position: absolute; top: 3px; left: 50%; margin-left: 9px; background: var(--tierra); color: #fff; border-radius: 99px; font-size: 10px; padding: 0 5px; line-height: 16px; }
+  .ciclo { height: 8px; border-radius: 99px; background: var(--trigo-claro); overflow: hidden; margin: 10px 0 4px; }
+  .ciclo i { display: block; height: 100%; background: var(--oliva); border-radius: 99px; }
+  .ciclo.listo i { background: var(--tierra); }
+  .cult-nom { font: 600 17px/1.2 "Iowan Old Style", Palatino, Georgia, serif; }
+  .num { font-weight: 700; white-space: nowrap; }
+  .num.gan { color: var(--oliva-osc); }
+  .num.neg { color: var(--rojo-t); }
+  .mov { padding: 10px 0; border-bottom: 1px solid var(--linea); }
+  .mov:last-child { border-bottom: 0; }
+  .barras { display: flex; align-items: flex-end; gap: 10px; height: 130px; padding-top: 8px; }
+  .barras > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; font-size: 11px; color: var(--suave); }
+  .barras .par { display: flex; align-items: flex-end; gap: 3px; height: 100%; width: 100%; justify-content: center; }
+  .barras .par i { display: block; width: 42%; max-width: 20px; border-radius: 5px 5px 0 0; min-height: 2px; }
+  .barras .v { background: var(--oliva); }
+  .barras .g { background: var(--trigo); }
+  .barras > div.on { color: var(--texto); font-weight: 700; }
+  .ley { display: flex; gap: 14px; font-size: 12px; color: var(--suave); margin-top: 8px; }
+  .ley i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .hbar { display: flex; align-items: center; gap: 8px; margin: 7px 0; font-size: 13px; }
+  .hbar span { flex: 0 0 105px; color: var(--suave); }
+  .hbar div { flex: 1; height: 10px; background: var(--trigo-claro); border-radius: 99px; overflow: hidden; }
+  .hbar div i { display: block; height: 100%; background: var(--tierra); border-radius: 99px; }
+  .hbar b { flex: 0 0 auto; font-size: 13px; }
+  .prox { border-left: 5px solid var(--tierra); }
+  .ok-grande { width: 58px; height: 58px; border-radius: 50%; background: var(--oliva); color: #fff; font-size: 30px; display: flex; align-items: center; justify-content: center; margin: 10px auto; }
+  .estados { display: flex; gap: 6px; flex-wrap: wrap; }
+  .estados button { flex: 1 1 auto; background: var(--tarjeta); color: var(--suave); border: 1px solid var(--linea); font-weight: 500; padding: 8px 10px; font-size: 13px; }
+  .estados button.on { background: var(--oliva-claro); color: var(--oliva-osc); border-color: var(--oliva); font-weight: 700; }
+  .bodega { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .nota { font-size: 13px; color: var(--trigo-t); background: var(--trigo-claro); padding: 7px 10px; border-radius: 10px; margin-top: 8px; }
+  input[type=month] { width: auto; padding: 7px 10px; font-size: 14px; }
+  @media (max-width: 430px) { .kpis b { font-size: 16px; } .rej { grid-template-columns: 1fr; } .hbar span { flex-basis: 86px; } }
+</style>
+<script>
+/* ===== Conexion con tu Apps Script (pega aqui tu link /exec) ===== */
+var URL_APPS_SCRIPT = 'PEGA_AQUI_TU_LINK_EXEC';
+window.BASE_PAGINA = location.origin + location.pathname;
+
+(function () {
+  function parametros() {
+    var q = {};
+    location.search.replace(/^\?/, '').split('&').forEach(function (p) {
+      if (!p) return;
+      var kv = p.split('=');
+      q[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || '').replace(/\+/g, ' '));
+    });
+    return q;
+  }
+  function nuevaLlamada() {
+    var ok = function () {}, ko = function () {};
+    var obj = {
+      withSuccessHandler: function (f) { ok = f; return obj; },
+      withFailureHandler: function (f) { ko = f; return obj; }
+    };
+    ['api_publico', 'api_entrar', 'api_cultivos', 'api_detalle', 'api_nuevo_cultivo', 'api_estado', 'api_gasto', 'api_cosecha', 'api_venta', 'api_pagado', 'api_ventas', 'api_resumen', 'api_ajustes', 'api_parcela', 'api_encargado'].forEach(function (fn) {
+      obj[fn] = function () {
+        var args = Array.prototype.slice.call(arguments);
+        fetch(URL_APPS_SCRIPT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ fn: fn, args: args })
+        }).then(function (r) { return r.json(); }).then(function (j) {
+          if (j.e) ko(new Error(j.e)); else ok(j.r);
+        }).catch(function () { ko(new Error('Sin conexión con el servidor. Revisa tu internet.')); });
+      };
+    });
+    return obj;
+  }
+  var script = { url: { getLocation: function (cb) { cb({ parameter: parametros() }); } } };
+  Object.defineProperty(script, 'run', { get: nuevaLlamada });
+  window.google = { script: script };
+})();
+</script>
+<title>Mi rancho</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Mi%20rancho%22%2C%22display%22%3A%22standalone%22%7D">
+</head>
+<body>
+<div class="app" id="app"><div class="cargando">Cargando…</div></div>
+<div class="nav" id="nav" style="display:none"></div>
+<div class="aviso" id="aviso"></div>
+
+<script>
+/* ===== CONFIG de la pantalla ===== */
+var CONFIG = {
+  LLAVE_PIN: 'agro_pin',          // donde se recuerda el PIN del dueno en este celular
+  ICONO: '&#127807;',             // icono del logo (hoja)
+  NOMBRES_MES: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+};
+
+var S = { ses: null, d: null, vista: 'inicio', filtro: 'activos', parcela: '', reg: 'gasto', regFolio: '', mes: '', detalle: '' };
+
+/* ---------- utilidades ---------- */
+function $(id) { return document.getElementById(id); }
+function esc(v) {
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function dinero(n) {
+  n = Number(n || 0);
+  return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function dineroCorto(n) {
+  n = Number(n || 0);
+  return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('es-MX', { maximumFractionDigits: 0 });
+}
+function kg(n) { return Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 1 }) + ' kg'; }
+function aviso(t) {
+  var a = $('aviso'); a.textContent = t; a.style.display = 'block';
+  clearTimeout(aviso.t); aviso.t = setTimeout(function () { a.style.display = 'none'; }, 3200);
+}
+function llamar(fn, args, ok, fallo) {
+  var r = google.script.run.withSuccessHandler(ok).withFailureHandler(function (e) {
+    var msg = (e && e.message) ? e.message : String(e);
+    aviso(msg);
+    if (fallo) fallo(msg);
+  });
+  r[fn].apply(r, args);
+}
+function guardarLocal(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function leerLocal(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+function dueno() { return S.d && S.d.rol === 'dueno'; }
+function cultivo(folio) {
+  for (var i = 0; i < S.d.cultivos.length; i++) if (S.d.cultivos[i].folio === folio) return S.d.cultivos[i];
+  return null;
+}
+function hoyISO() {
+  var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+function mesActual() { return hoyISO().slice(0, 7); }
+function nombreMes(m) { var p = String(m).split('-'); return CONFIG.NOMBRES_MES[+p[1] - 1] + ' ' + p[0].slice(2); }
+function cargando() { $('app').innerHTML = '<div class="cargando">Cargando…</div>'; }
+function opciones(lista, sel) {
+  return lista.map(function (x) { return '<option' + (x === sel ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('');
+}
+function claseEstado(e) {
+  return e === 'Cosechando' ? 'tierra' : e === 'Terminado' ? 'cielo' : e === 'Sembrado' ? '' : 'oliva';
+}
+function textoFaltan(c) {
+  if (c.estado === 'Terminado') return 'Ciclo terminado';
+  if (c.estado === 'Cosechando') return 'En cosecha';
+  if (c.faltan === 99999) return 'Sin fecha de cosecha';
+  if (c.faltan < 0) return 'Cosecha atrasada ' + (-c.faltan) + ' días';
+  if (c.faltan === 0) return 'Se cosecha hoy';
+  return 'Cosecha en ' + c.faltan + ' días';
+}
+
+/* ---------- entrada ---------- */
+function pantallaPin(msg) {
+  $('nav').style.display = 'none';
+  $('app').innerHTML = '<div class="pin tarjeta"><div class="logo">' + CONFIG.ICONO + '</div>' +
+    '<h1>' + esc(S.negocio || 'Mi rancho') + '</h1><div class="sub">Acceso del dueño</div>' +
+    '<input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">' +
+    '<button class="ancho" id="bpin" onclick="entrar({ pin: $(\'pin\').value })">Entrar</button>' +
+    (msg ? '<div class="sub" style="margin-top:10px;color:#8B4436">' + esc(msg) + '</div>' : '') +
+    '<div class="sub" style="margin-top:14px">¿Eres encargado? Abre el link que te mandaron por WhatsApp.</div></div>';
+  var i = $('pin'); i.focus();
+  i.onkeydown = function (e) { if (e.key === 'Enter') entrar({ pin: i.value }); };
+}
+function entrar(ses, auto) {
+  if ($('bpin')) $('bpin').disabled = true;
+  google.script.run.withSuccessHandler(function (r) {
+    S.ses = ses; S.d = r;
+    if (ses.pin) guardarLocal(CONFIG.LLAVE_PIN, ses.pin);
+    S.mes = mesActual();
+    ir(r.rol === 'dueno' ? 'inicio' : 'cultivos');
+  }).withFailureHandler(function (e) {
+    var m = e && e.message ? e.message : 'No se pudo entrar';
+    if (ses.pin) { guardarLocal(CONFIG.LLAVE_PIN, ''); pantallaPin(auto ? '' : m); }
+    else $('app').innerHTML = '<div class="vacio">' + esc(m) + '</div>';
+  }).api_entrar(ses);
+}
+function salir() { guardarLocal(CONFIG.LLAVE_PIN, ''); S.ses = null; S.d = null; pantallaPin(); }
+
+/** Vuelve a pedir los datos (despues de guardar algo). */
+function refrescar(cb) {
+  llamar('api_entrar', [S.ses], function (r) { S.d = r; if (cb) cb(); });
+}
+
+/* ---------- navegacion ---------- */
+function ir(v) {
+  S.vista = v;
+  var tabs = [];
+  if (dueno()) tabs.push(['inicio', '&#9728;', 'Resumen']);
+  tabs.push(['cultivos', '&#127793;', 'Cultivos']);
+  tabs.push(['registrar', '&#9998;', 'Registrar']);
+  if (dueno()) { tabs.push(['ventas', '&#129530;', 'Ventas']); tabs.push(['ajustes', '&#9881;', 'Ajustes']); }
+  var h = '';
+  tabs.forEach(function (t) {
+    h += '<button class="' + (v === t[0] ? 'on' : '') + '" onclick="ir(\'' + t[0] + '\')"><i>' + t[1] + '</i>' + t[2] +
+      (t[0] === 'cultivos' && S.d.proximas ? '<span class="punto">' + S.d.proximas + '</span>' : '') + '</button>';
+  });
+  $('nav').innerHTML = h; $('nav').style.display = 'flex';
+  window.scrollTo(0, 0);
+  if (v === 'inicio') cargarResumen();
+  else if (v === 'cultivos') pintarCultivos();
+  else if (v === 'registrar') pintarRegistrar();
+  else if (v === 'ventas') cargarVentas();
+  else if (v === 'ajustes') cargarAjustes();
+  else if (v === 'detalle') cargarDetalle(S.detalle);
+}
+function banda(titulo, derecha) {
+  return '<div class="banda"><div class="fila"><div class="marca"><div class="logo">' + CONFIG.ICONO + '</div><div><h1>' + esc(titulo) +
+    '</h1><div class="sub">' + esc(S.d.negocio) + (dueno() ? '' : ' · ' + esc(S.d.nombre)) + '</div></div></div>' + (derecha || '') + '</div></div>';
+}
+
+/* =========================================================
+   RESUMEN (dueno)
+   ========================================================= */
+function cargarResumen() {
+  cargando();
+  llamar('api_resumen', [S.ses, S.mes], pintarResumen);
+}
+function pintarResumen(r) {
+  var h = banda('Resumen', '<input type="month" value="' + esc(r.mes) + '" onchange="S.mes=this.value||mesActual();cargarResumen()">');
+  h += '<div class="kpis"><div class="tarjeta"><span>Ventas</span><b>' + dineroCorto(r.venta) + '</b></div>' +
+    '<div class="tarjeta"><span>Gastos</span><b>' + dineroCorto(r.gasto) + '</b></div>' +
+    '<div class="tarjeta ' + (r.ganancia < 0 ? 'neg' : 'gan') + '"><span>Ganancia</span><b>' + dineroCorto(r.ganancia) + '</b></div></div>';
+  h += '<div class="kpis cuatro"><div class="tarjeta clic" onclick="ir(\'ventas\')"><span>Por cobrar</span><b>' + dineroCorto(r.porCobrar) + '</b></div>' +
+    '<div class="tarjeta"><span>Cosechado en el mes</span><b>' + kg(r.kilos) + '</b></div></div>';
+
+  if (r.proximas.length) {
+    h += '<h2>Cosechas próximas <small>' + S.d.diasAviso + ' días o menos</small></h2><div class="lista">';
+    r.proximas.forEach(function (c) {
+      h += '<div class="tarjeta prox clic" onclick="verDetalle(\'' + esc(c.folio) + '\')"><div class="fila"><div><div class="cult-nom">' +
+        esc(c.cultivo) + '</div><div class="sub">' + esc(c.parcelaNombre) + ' · ' + c.hectareas + ' ha</div></div>' +
+        '<span class="chip tierra">' + esc(textoFaltan(c)) + '</span></div></div>';
+    });
+    h += '</div>';
+  }
+
+  var max = 1;
+  r.serie.forEach(function (s) { max = Math.max(max, s.venta, s.gasto); });
+  h += '<h2>Últimos 6 meses</h2><div class="tarjeta"><div class="barras">';
+  r.serie.forEach(function (s) {
+    h += '<div class="' + (s.mes === r.mes ? 'on' : '') + '" title="Ventas ' + dinero(s.venta) + ' · Gastos ' + dinero(s.gasto) + '">' +
+      '<div class="par"><i class="v" style="height:' + Math.round(s.venta / max * 100) + '%"></i><i class="g" style="height:' +
+      Math.round(s.gasto / max * 100) + '%"></i></div>' + nombreMes(s.mes) + '</div>';
+  });
+  h += '</div><div class="ley"><span><i style="background:var(--oliva)"></i>Ventas</span><span><i style="background:var(--trigo)"></i>Gastos</span></div></div>';
+
+  var act = r.cultivos.filter(function (c) { return c.gasto || c.venta || c.estado !== 'Terminado'; });
+  h += '<h2>Ganancia por cultivo <small>todo el ciclo</small></h2><div class="tarjeta tabla"><table><tr><th>Cultivo</th><th class="n">Cosecha</th><th class="n">Costo/kg</th><th class="n">Ganancia</th></tr>';
+  act.sort(function (a, b) { return b.ganancia - a.ganancia; }).forEach(function (c) {
+    h += '<tr class="clic" onclick="verDetalle(\'' + esc(c.folio) + '\')"><td><b>' + esc(c.cultivo) + '</b><div class="sub">' + esc(c.parcelaNombre) +
+      '</div></td><td class="n">' + kg(c.kgCosecha) + (c.rendHa ? '<div class="sub">' + kg(c.rendHa) + '/ha</div>' : '') + '</td><td class="n">' +
+      (c.costoKg ? dinero(c.costoKg) : '—') + (c.precioProm ? '<div class="sub">vende a ' + dinero(c.precioProm) + '</div>' : '') +
+      '</td><td class="n"><span class="num ' + (c.ganancia < 0 ? 'neg' : 'gan') + '">' + dineroCorto(c.ganancia) + '</span></td></tr>';
+  });
+  h += '</table>';
+  if (r.gastoGeneral) h += '<div class="nota">Gastos generales (no son de un cultivo): ' + dinero(r.gastoGeneral) + '</div>';
+  h += '<div class="sub" style="margin-top:8px">Un cultivo en desarrollo sale en negativo porque ya tiene gastos y todavía no vende.</div></div>';
+
+  if (r.tipos.length) {
+    var mt = r.tipos[0].total || 1;
+    h += '<h2>¿En qué se fue el dinero? <small>' + nombreMes(r.mes) + '</small></h2><div class="tarjeta">';
+    r.tipos.forEach(function (t) {
+      h += '<div class="hbar"><span>' + esc(t.tipo) + '</span><div><i style="width:' + Math.round(t.total / mt * 100) + '%"></i></div><b>' + dineroCorto(t.total) + '</b></div>';
+    });
+    h += '</div>';
+  }
+  h += '<div style="text-align:center;margin-top:18px"><button class="volver" onclick="salir()">Salir</button></div>';
+  $('app').innerHTML = h;
+}
+
+/* =========================================================
+   CULTIVOS
+   ========================================================= */
+function pintarCultivos() {
+  var der = dueno() ? '<button class="chico" onclick="formCultivo()">+ Nuevo</button>' : '';
+  var h = banda('Cultivos', der);
+  var fs = [['activos', 'Activos'], ['proximos', 'Por cosechar'], ['Cosechando', 'Cosechando'], ['Terminado', 'Terminados'], ['todos', 'Todos']];
+  h += '<div class="filtros">';
+  fs.forEach(function (f) { h += '<button class="' + (S.filtro === f[0] ? 'on' : '') + '" onclick="S.filtro=\'' + f[0] + '\';pintarCultivos()">' + f[1] + '</button>'; });
+  h += '</div>';
+  if (S.d.parcelas.length > 1) {
+    h += '<select style="margin-bottom:12px" onchange="S.parcela=this.value;pintarCultivos()"><option value="">Todas las parcelas</option>';
+    S.d.parcelas.forEach(function (p) { h += '<option value="' + esc(p.id) + '"' + (S.parcela === p.id ? ' selected' : '') + '>' + esc(p.nombre) + '</option>'; });
+    h += '</select>';
+  }
+  var lista = S.d.cultivos.filter(function (c) {
+    if (S.parcela && c.parcela !== S.parcela) return false;
+    if (S.filtro === 'activos') return c.estado !== 'Terminado';
+    if (S.filtro === 'proximos') return c.proxima;
+    if (S.filtro === 'todos') return true;
+    return c.estado === S.filtro;
+  }).sort(function (a, b) { return a.faltan - b.faltan; });
+  if (!lista.length) h += '<div class="tarjeta vacio">No hay cultivos en esta vista.</div>';
+  h += '<div class="lista">';
+  lista.forEach(function (c) {
+    var pct = c.diasCosecha ? Math.max(3, Math.min(100, Math.round(c.diasSembrado / c.diasCosecha * 100))) : 0;
+    h += '<div class="tarjeta clic' + (c.proxima ? ' prox' : '') + '" onclick="verDetalle(\'' + esc(c.folio) + '\')">' +
+      '<div class="fila"><div><div class="cult-nom">' + esc(c.cultivo) + (c.variedad ? ' <span class="sub">' + esc(c.variedad) + '</span>' : '') +
+      '</div><div class="sub">' + esc(c.parcelaNombre) + ' · ' + c.hectareas + ' ha · ' + esc(c.folio) + '</div></div>' +
+      '<span class="chip ' + claseEstado(c.estado) + '">' + esc(c.estado) + '</span></div>';
+    if (c.estado !== 'Terminado' && c.diasCosecha)
+      h += '<div class="ciclo' + (pct >= 100 ? ' listo' : '') + '"><i style="width:' + pct + '%"></i></div>' +
+        '<div class="fila sub"><span>Sembrado hace ' + c.diasSembrado + ' días</span><span>' + esc(textoFaltan(c)) + '</span></div>';
+    else h += '<div class="sub" style="margin-top:6px">' + esc(textoFaltan(c)) + '</div>';
+    if (c.kgCosecha || dueno()) {
+      h += '<div class="fila" style="margin-top:8px"><span class="sub">' + (c.kgCosecha ? 'Cosechado ' + kg(c.kgCosecha) + ' · en bodega ' + kg(c.enBodega) : 'Sin cosecha todavía') + '</span>' +
+        (dueno() ? '<span class="num ' + (c.ganancia < 0 ? 'neg' : 'gan') + '">' + dineroCorto(c.ganancia) + '</span>' : '') + '</div>';
+    }
+    h += '</div>';
+  });
+  h += '</div>';
+  if (!dueno()) h += '<div style="text-align:center;margin-top:10px" class="sub">Toca un cultivo para registrar labores o cosecha.</div>';
+  $('app').innerHTML = h;
+}
+
+function formCultivo() {
+  var h = banda('Nuevo cultivo') + '<button class="volver" onclick="ir(\'cultivos\')">&#8592; Cultivos</button><div class="tarjeta">';
+  h += '<label>Parcela</label><select id="c_par">';
+  S.d.parcelas.forEach(function (p) { h += '<option value="' + esc(p.id) + '">' + esc(p.nombre) + ' (' + p.hectareas + ' ha)</option>'; });
+  h += '</select><div class="rej"><div><label>¿Qué se sembró?</label><input id="c_cul" placeholder="Ej. Jitomate"></div>' +
+    '<div><label>Variedad</label><input id="c_var" placeholder="Ej. Saladette"></div>' +
+    '<div><label>Hectáreas</label><input id="c_ha" type="number" step="0.01" min="0" placeholder="1.5"></div>' +
+    '<div><label>Fecha de siembra</label><input id="c_fec" type="date" value="' + hoyISO() + '"></div>' +
+    '<div><label>Días a cosecha</label><input id="c_dias" type="number" min="0" placeholder="Ej. 90"></div>' +
+    '<div><label>Kg esperados por hectárea</label><input id="c_esp" type="number" min="0" placeholder="Ej. 40000"></div></div>' +
+    '<label>Nota</label><input id="c_nota" placeholder="Opcional">' +
+    '<button class="ancho" style="margin-top:14px" id="c_btn" onclick="guardarCultivo()">Guardar cultivo</button></div>';
+  $('app').innerHTML = h;
+}
+function guardarCultivo() {
+  var d = { parcela: $('c_par').value, cultivo: $('c_cul').value, variedad: $('c_var').value, hectareas: $('c_ha').value,
+    siembra: $('c_fec').value, diasCosecha: $('c_dias').value, esperado: $('c_esp').value, nota: $('c_nota').value };
+  $('c_btn').disabled = true;
+  llamar('api_nuevo_cultivo', [S.ses, d], function (folio) {
+    aviso('Cultivo ' + folio + ' guardado');
+    refrescar(function () { verDetalle(folio); });
+  }, function () { $('c_btn').disabled = false; });
+}
+
+/* ---------- detalle de un cultivo ---------- */
+function verDetalle(folio) { S.detalle = folio; ir('detalle'); }
+function cargarDetalle(folio) {
+  cargando();
+  llamar('api_detalle', [S.ses, folio], pintarDetalle);
+}
+function pintarDetalle(r) {
+  var c = r.cultivo;
+  var h = banda(c.cultivo, '<span class="chip ' + claseEstado(c.estado) + '">' + esc(c.estado) + '</span>');
+  h += '<button class="volver" onclick="ir(\'cultivos\')">&#8592; Cultivos</button>';
+  h += '<div class="tarjeta"><div class="sub">' + esc(c.parcelaNombre) + ' · ' + c.hectareas + ' ha' + (c.variedad ? ' · ' + esc(c.variedad) : '') +
+    ' · ' + esc(c.folio) + '</div><div style="margin-top:4px">Sembrado el <b>' + esc(c.siembra) + '</b>' +
+    (c.estimada ? ' · cosecha estimada <b>' + esc(c.estimada) + '</b>' : '') + '</div><div class="sub" style="margin-top:2px">' + esc(textoFaltan(c)) + '</div>';
+  if (c.nota) h += '<div class="nota">' + esc(c.nota) + '</div>';
+  h += '<label>Estado</label><div class="estados">';
+  S.d.estados.forEach(function (e) {
+    h += '<button class="' + (c.estado === e ? 'on' : '') + '" onclick="cambiarEstado(\'' + esc(c.folio) + '\',\'' + esc(e) + '\')">' + esc(e) + '</button>';
+  });
+  h += '</div></div>';
+
+  if (dueno()) {
+    h += '<div class="kpis cuatro" style="margin-top:10px"><div class="tarjeta"><span>Gastos</span><b>' + dinero(c.gasto) + '</b></div>' +
+      '<div class="tarjeta"><span>Ventas</span><b>' + dinero(c.venta) + '</b></div>' +
+      '<div class="tarjeta ' + (c.ganancia < 0 ? 'neg' : 'gan') + '"><span>Ganancia</span><b>' + dinero(c.ganancia) + '</b></div>' +
+      '<div class="tarjeta"><span>Costo por kilo</span><b>' + (c.costoKg ? dinero(c.costoKg) : '—') + '</b></div></div>';
+  } else h += '<div style="height:10px"></div>';
+  h += '<div class="kpis"><div class="tarjeta"><span>Cosechado</span><b>' + kg(c.kgCosecha) + '</b></div>' +
+    '<div class="tarjeta"><span>En bodega</span><b>' + kg(c.enBodega) + '</b></div>' +
+    '<div class="tarjeta"><span>Rinde por ha</span><b>' + (c.rendHa ? kg(c.rendHa) : '—') + '</b></div></div>';
+  if (c.esperadoHa) h += '<div class="sub" style="margin:-2px 0 6px">Esperado: ' + kg(c.esperadoHa) + ' por ha' + (c.kgCosecha ? ' · lleva el ' + c.avance + ' %' : '') + '</div>';
+  var bod = Object.keys(c.bodega || {}).filter(function (q) { return c.bodega[q] > 0; });
+  if (bod.length) {
+    h += '<div class="bodega">';
+    bod.forEach(function (q) { h += '<span class="chip oliva">' + esc(q) + ': ' + kg(c.bodega[q]) + '</span>'; });
+    h += '</div>';
+  }
+  h += '<div class="botones"><button class="sec" onclick="registrarDesde(\'gasto\',\'' + esc(c.folio) + '\')">+ Labor o gasto</button>' +
+    '<button class="sec" onclick="registrarDesde(\'cosecha\',\'' + esc(c.folio) + '\')">+ Cosecha</button>' +
+    (dueno() ? '<button onclick="registrarDesde(\'venta\',\'' + esc(c.folio) + '\')">Vender</button>' : '') + '</div>';
+
+  if (dueno() && c.gastosTipo && Object.keys(c.gastosTipo).length) {
+    var tipos = Object.keys(c.gastosTipo).map(function (k) { return [k, c.gastosTipo[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+    var mt = tipos[0][1] || 1;
+    h += '<h2>Gastos por tipo</h2><div class="tarjeta">';
+    tipos.forEach(function (t) {
+      h += '<div class="hbar"><span>' + esc(t[0]) + '</span><div><i style="width:' + Math.round(t[1] / mt * 100) + '%"></i></div><b>' + dineroCorto(t[1]) + '</b></div>';
+    });
+    h += '</div>';
+  }
+
+  h += '<h2>Cosechas <small>' + r.cosechas.length + '</small></h2><div class="tarjeta">';
+  if (!r.cosechas.length) h += '<div class="vacio">Todavía no hay cosechas.</div>';
+  r.cosechas.forEach(function (k) {
+    h += '<div class="mov fila"><div><b>' + kg(k.kilos) + '</b> <span class="chip">' + esc(k.calidad) + '</span><div class="sub">' + esc(k.fecha) +
+      ' · ' + esc(k.quien) + (k.nota ? ' · ' + esc(k.nota) : '') + '</div></div></div>';
+  });
+  h += '</div>';
+
+  if (dueno()) {
+    h += '<h2>Ventas <small>' + r.ventas.length + '</small></h2><div class="tarjeta">';
+    if (!r.ventas.length) h += '<div class="vacio">Todavía no hay ventas.</div>';
+    r.ventas.forEach(function (v) {
+      h += '<div class="mov fila"><div><b>' + esc(v.cliente) + '</b><div class="sub">' + esc(v.fecha) + ' · ' + kg(v.kilos) + ' ' + esc(v.calidad) +
+        ' a ' + dinero(v.precio) + '</div></div><div style="text-align:right"><span class="num">' + dinero(v.importe) + '</span><br><span class="chip ' +
+        (v.pago === 'Pagado' ? 'oliva' : 'rojo') + '">' + esc(v.pago) + '</span></div></div>';
+    });
+    h += '</div>';
+  }
+
+  h += '<h2>Labores y gastos <small>' + r.gastos.length + '</small></h2><div class="tarjeta">';
+  if (!r.gastos.length) h += '<div class="vacio">Sin registros.</div>';
+  r.gastos.forEach(function (g) {
+    h += '<div class="mov fila"><div><b>' + esc(g.concepto || g.tipo) + '</b> <span class="chip">' + esc(g.tipo) + '</span><div class="sub">' + esc(g.fecha) +
+      (g.cantidad ? ' · ' + g.cantidad + ' ' + esc(g.unidad) : '') + ' · ' + esc(g.quien) + '</div></div>' +
+      (dueno() ? '<span class="num">' + dinero(g.costo) + '</span>' : '') + '</div>';
+  });
+  h += '</div>';
+  $('app').innerHTML = h;
+}
+function cambiarEstado(folio, e) {
+  llamar('api_estado', [S.ses, folio, e], function (m) {
+    aviso(m);
+    refrescar(function () { cargarDetalle(folio); });
+  });
+}
+
+/* =========================================================
+   REGISTRAR: labor/gasto, cosecha, venta
+   ========================================================= */
+function registrarDesde(tipo, folio) { S.reg = tipo; S.regFolio = folio; ir('registrar'); }
+function opcionesCultivo(sel, conGeneral, soloConBodega) {
+  var h = '';
+  if (conGeneral) h += '<option value="General">General (todo el rancho)</option>';
+  S.d.cultivos.filter(function (c) {
+    if (c.folio === sel) return true;
+    if (soloConBodega) return c.enBodega > 0;
+    return c.estado !== 'Terminado';
+  }).forEach(function (c) {
+    h += '<option value="' + esc(c.folio) + '"' + (c.folio === sel ? ' selected' : '') + '>' + esc(c.cultivo) + ' · ' + esc(c.parcelaNombre) +
+      (soloConBodega ? ' (' + kg(c.enBodega) + ')' : '') + '</option>';
+  });
+  return h;
+}
+function pintarRegistrar() {
+  var h = banda('Registrar');
+  var segs = [['gasto', 'Labor o gasto'], ['cosecha', 'Cosecha']];
+  if (dueno()) segs.push(['venta', 'Venta']);
+  if (!dueno() && S.reg === 'venta') S.reg = 'gasto';
+  h += '<div class="seg">';
+  segs.forEach(function (s) { h += '<button class="' + (S.reg === s[0] ? 'on' : '') + '" onclick="S.reg=\'' + s[0] + '\';pintarRegistrar()">' + s[1] + '</button>'; });
+  h += '</div><div class="tarjeta">';
+  if (S.reg === 'gasto') {
+    h += '<label>Cultivo</label><select id="g_cul">' + opcionesCultivo(S.regFolio, true) + '</select>' +
+      '<div class="rej"><div><label>Tipo</label><select id="g_tipo">' + opciones(S.d.tipos, 'Fertilizante') + '</select></div>' +
+      '<div><label>Fecha</label><input id="g_fec" type="date" value="' + hoyISO() + '"></div></div>' +
+      '<label>¿Qué se hizo o compró?</label><input id="g_con" placeholder="Ej. Fertilización con triple 17">' +
+      '<div class="rej"><div><label>Cantidad</label><input id="g_cant" type="number" step="0.01" min="0" placeholder="Ej. 4"></div>' +
+      '<div><label>Unidad</label><input id="g_uni" placeholder="bultos, litros, jornales" list="unidades"></div></div>' +
+      '<datalist id="unidades"><option>bultos</option><option>kg</option><option>litros</option><option>jornales</option><option>plantas</option><option>horas</option><option>cajas</option><option>viajes</option></datalist>' +
+      '<label>Costo total</label><input id="g_costo" type="number" step="0.01" min="0" placeholder="0 si solo es una labor sin costo">' +
+      '<button class="ancho" style="margin-top:14px" id="r_btn" onclick="guardarGasto()">Guardar</button>';
+  } else if (S.reg === 'cosecha') {
+    h += '<label>Cultivo</label><select id="k_cul">' + opcionesCultivo(S.regFolio, false) + '</select>' +
+      '<div class="rej"><div><label>Kilos</label><input id="k_kg" type="number" step="0.1" min="0" placeholder="Ej. 850"></div>' +
+      '<div><label>Calidad</label><select id="k_cal">' + opciones(S.d.calidades, S.d.calidades[0]) + '</select></div></div>' +
+      '<div class="rej"><div><label>Fecha</label><input id="k_fec" type="date" value="' + hoyISO() + '"></div>' +
+      '<div><label>Nota</label><input id="k_nota" placeholder="Ej. 34 cajas de 25 kg"></div></div>' +
+      '<button class="ancho" style="margin-top:14px" id="r_btn" onclick="guardarCosecha()">Guardar cosecha</button>';
+  } else {
+    var cls = '<datalist id="clientes">' + S.d.clientes.map(function (c) { return '<option value="' + esc(c.nombre) + '">'; }).join('') + '</datalist>';
+    h += '<label>Cultivo</label><select id="v_cul" onchange="infoBodega()">' + opcionesCultivo(S.regFolio, false, true) + '</select>' +
+      '<div class="rej"><div><label>Calidad</label><select id="v_cal" onchange="infoBodega()">' + opciones(S.d.calidades, S.d.calidades[0]) + '</select></div>' +
+      '<div><label>Fecha</label><input id="v_fec" type="date" value="' + hoyISO() + '"></div></div><div id="v_bod" class="sub" style="margin-top:6px"></div>' +
+      '<div class="rej"><div><label>Kilos</label><input id="v_kg" type="number" step="0.1" min="0" oninput="totalVenta()"></div>' +
+      '<div><label>Precio por kilo</label><input id="v_pre" type="number" step="0.01" min="0" oninput="totalVenta()"></div></div>' +
+      '<label>Cliente</label><input id="v_cli" list="clientes" placeholder="Nombre o bodega" oninput="waCliente()">' + cls +
+      '<div class="rej"><div><label>WhatsApp del cliente</label><input id="v_wa" type="tel" placeholder="10 dígitos (opcional)"></div>' +
+      '<div><label>Pago</label><select id="v_pago"><option>Pagado</option><option>Pendiente</option></select></div></div>' +
+      '<div class="fila" style="margin-top:14px"><span class="sub">Total</span><b class="num" id="v_tot" style="font-size:20px">$0.00</b></div>' +
+      '<button class="ancho" style="margin-top:10px" id="r_btn" onclick="guardarVenta()">Guardar venta</button>';
+  }
+  h += '</div>';
+  $('app').innerHTML = h;
+  if (S.reg === 'venta') infoBodega();
+}
+function datoFecha(id) { var v = $(id).value; return v ? v : hoyISO(); }
+function trasGuardar(m, folio) {
+  S.regFolio = '';
+  aviso(m);
+  refrescar(function () { if (folio && folio !== 'General') verDetalle(folio); else pintarRegistrar(); });
+}
+function guardarGasto() {
+  var folio = $('g_cul').value;
+  var d = { folio: folio, tipo: $('g_tipo').value, fecha: datoFecha('g_fec'), concepto: $('g_con').value, cantidad: $('g_cant').value,
+    unidad: $('g_uni').value, costo: $('g_costo').value };
+  $('r_btn').disabled = true;
+  llamar('api_gasto', [S.ses, d], function (m) { trasGuardar(m, folio); }, function () { $('r_btn').disabled = false; });
+}
+function guardarCosecha() {
+  var folio = $('k_cul').value;
+  if (!folio) { aviso('Primero da de alta un cultivo'); return; }
+  var d = { folio: folio, kilos: $('k_kg').value, calidad: $('k_cal').value, fecha: datoFecha('k_fec'), nota: $('k_nota').value };
+  $('r_btn').disabled = true;
+  llamar('api_cosecha', [S.ses, d], function (m) { trasGuardar(m, folio); }, function () { $('r_btn').disabled = false; });
+}
+function infoBodega() {
+  var c = cultivo($('v_cul') ? $('v_cul').value : '');
+  if (!c) { $('v_bod').textContent = 'No hay kilos en bodega. Registra primero una cosecha.'; return; }
+  var q = $('v_cal').value, hay = (c.bodega || {})[q] || 0;
+  $('v_bod').innerHTML = 'En bodega de ' + esc(q).toLowerCase() + ': <b>' + kg(hay) + '</b>' + (c.precioProm ? ' · precio promedio ' + dinero(c.precioProm) : '');
+}
+function totalVenta() { $('v_tot').textContent = dinero((Number($('v_kg').value) || 0) * (Number($('v_pre').value) || 0)); }
+function waCliente() {
+  var n = $('v_cli').value.toLowerCase();
+  var c = S.d.clientes.filter(function (x) { return x.nombre.toLowerCase() === n; })[0];
+  if (c && c.whatsapp && !$('v_wa').value) $('v_wa').value = c.whatsapp;
+}
+function guardarVenta() {
+  var d = { folio: $('v_cul').value, calidad: $('v_cal').value, fecha: datoFecha('v_fec'), kilos: $('v_kg').value, precio: $('v_pre').value,
+    cliente: $('v_cli').value, whatsapp: $('v_wa').value, pago: $('v_pago').value };
+  if (!d.folio) { aviso('No hay kilos en bodega para vender'); return; }
+  $('r_btn').disabled = true;
+  llamar('api_venta', [S.ses, d], function (v) {
+    S.regFolio = '';
+    refrescar();
+    var h = banda('Venta guardada') + '<div class="tarjeta" style="text-align:center"><div class="ok-grande">&#10003;</div>' +
+      '<div class="cult-nom">' + esc(v.folio) + ' · ' + dinero(v.importe) + '</div><div class="sub" style="margin-top:4px">' + esc(v.cliente) + ' · ' +
+      kg(v.kilos) + ' de ' + esc(v.cultivo) + ' (' + esc(v.calidad) + ') a ' + dinero(v.precio) + '</div>' +
+      '<div style="margin-top:6px"><span class="chip ' + (v.pago === 'Pagado' ? 'oliva' : 'rojo') + '">' + esc(v.pago) + '</span></div>' +
+      '<div class="botones">' + (v.wa ? '<a class="btn wa" href="' + esc(v.wa) + '" target="_blank" rel="noopener">Mandar nota por WhatsApp</a>' : '') +
+      '<button class="sec" onclick="ir(\'registrar\')">Otra venta</button></div></div>';
+    $('app').innerHTML = h;
+  }, function () { $('r_btn').disabled = false; });
+}
+
+/* =========================================================
+   VENTAS (dueno)
+   ========================================================= */
+function cargarVentas() {
+  cargando();
+  llamar('api_ventas', [S.ses], pintarVentas);
+}
+function filaVenta(v, conBoton) {
+  return '<div class="mov"><div class="fila"><div><b>' + esc(v.cliente) + '</b><div class="sub">' + esc(v.folio) + ' · ' + esc(v.fecha) + ' · ' +
+    esc(v.cultivo) + ' ' + esc(v.calidad).toLowerCase() + ' · ' + kg(v.kilos) + ' a ' + dinero(v.precio) + '</div></div>' +
+    '<div style="text-align:right"><span class="num">' + dinero(v.importe) + '</span><br><span class="chip ' + (v.pago === 'Pagado' ? 'oliva' : 'rojo') + '">' +
+    esc(v.pago) + '</span></div></div>' +
+    (conBoton ? '<div class="botones" style="margin-top:8px"><button class="chico" onclick="marcarPagado(\'' + esc(v.folio) + '\')">Marcar pagado</button>' +
+      (v.wa ? '<a class="btn chico wa" target="_blank" rel="noopener" href="' + esc(v.wa) + '">Recordar por WhatsApp</a>' : '') + '</div>' : '') + '</div>';
+}
+function pintarVentas(r) {
+  var h = banda('Ventas', '<button class="chico" onclick="registrarDesde(\'venta\',\'\')">+ Venta</button>');
+  h += '<div class="kpis cuatro"><div class="tarjeta neg"><span>Por cobrar</span><b>' + dinero(r.porCobrar) + '</b></div>' +
+    '<div class="tarjeta"><span>Notas pendientes</span><b>' + r.pendientes.length + '</b></div></div>';
+  if (r.pendientes.length) {
+    h += '<h2>Pendientes de pago</h2><div class="tarjeta">';
+    r.pendientes.forEach(function (v) { h += filaVenta(v, true); });
+    h += '</div>';
+  }
+  h += '<h2>Últimas ventas</h2><div class="tarjeta">';
+  if (!r.ventas.length) h += '<div class="vacio">Todavía no hay ventas.</div>';
+  r.ventas.forEach(function (v) { h += filaVenta(v, false); });
+  h += '</div>';
+  $('app').innerHTML = h;
+}
+function marcarPagado(folio) {
+  llamar('api_pagado', [S.ses, folio], function (m) { aviso(m); refrescar(); cargarVentas(); });
+}
+
+/* =========================================================
+   AJUSTES (dueno): parcelas y encargados
+   ========================================================= */
+function cargarAjustes() {
+  cargando();
+  llamar('api_ajustes', [S.ses, window.BASE_PAGINA || ''], pintarAjustes);
+}
+function pintarAjustes(r) {
+  var h = banda('Ajustes');
+  h += '<h2>Parcelas</h2><div class="tarjeta">';
+  r.parcelas.forEach(function (p) {
+    h += '<div class="mov"><div class="fila"><div><b>' + esc(p.nombre) + '</b><div class="sub">' + p.hectareas + ' ha' + (p.riego ? ' · ' + esc(p.riego) : '') +
+      (p.ubicacion ? ' · ' + esc(p.ubicacion) : '') + '</div></div><span class="chip ' + (p.usadas >= p.hectareas ? 'tierra' : 'oliva') + '">' +
+      p.usadas + ' de ' + p.hectareas + ' ha sembradas</span></div>' +
+      (p.activos.length ? '<div class="sub" style="margin-top:3px">' + p.activos.map(esc).join(', ') + '</div>' : '') + '</div>';
+  });
+  h += '<label>Nueva parcela</label><div class="rej"><input id="p_nom" placeholder="Nombre"><input id="p_ha" type="number" step="0.01" min="0" placeholder="Hectáreas"></div>' +
+    '<div class="rej" style="margin-top:8px"><input id="p_ubi" placeholder="Ubicación (opcional)"><input id="p_rie" placeholder="Riego: goteo, temporal…"></div>' +
+    '<button class="sec ancho" style="margin-top:10px" onclick="nuevaParcela()">Agregar parcela</button></div>';
+
+  h += '<h2>Encargados <small>registran labores y cosechas, no ven dinero</small></h2><div class="tarjeta">';
+  if (!r.encargados.length) h += '<div class="vacio">Sin encargados.</div>';
+  r.encargados.forEach(function (x) {
+    h += '<div class="mov"><div class="fila"><b>' + esc(x.nombre) + '</b><span class="sub">' + esc(x.whatsapp) + '</span></div>' +
+      '<div class="botones" style="margin-top:8px">' + (x.whatsapp ? '<a class="btn chico wa" target="_blank" rel="noopener" href="' + esc(x.wa) + '">Mandar link por WhatsApp</a>' : '') +
+      '<button class="chico sec" data-l="' + esc(x.link) + '" onclick="copiar(this.getAttribute(\'data-l\'))">Copiar link</button></div></div>';
+  });
+  h += '<label>Nuevo encargado</label><div class="rej"><input id="e_nom" placeholder="Nombre"><input id="e_wa" type="tel" placeholder="WhatsApp (10 dígitos)"></div>' +
+    '<button class="sec ancho" style="margin-top:10px" onclick="nuevoEncargado()">Agregar encargado</button>' +
+    '<div class="sub" style="margin-top:10px">Para quitarle el acceso a alguien, borra su clave en la pestaña Encargados de la hoja; se crea una nueva sola.</div></div>';
+  h += '<div style="text-align:center;margin-top:18px"><button class="volver" onclick="salir()">Salir</button></div>';
+  $('app').innerHTML = h;
+}
+function nuevaParcela() {
+  var d = { nombre: $('p_nom').value, hectareas: $('p_ha').value, ubicacion: $('p_ubi').value, riego: $('p_rie').value };
+  llamar('api_parcela', [S.ses, d], function () { aviso('Parcela agregada'); refrescar(); cargarAjustes(); });
+}
+function nuevoEncargado() {
+  var d = { nombre: $('e_nom').value, whatsapp: $('e_wa').value };
+  llamar('api_encargado', [S.ses, d], function () { aviso('Encargado agregado'); cargarAjustes(); });
+}
+function copiar(l) {
+  function respaldo() { prompt('Copia este link:', l); }
+  try { navigator.clipboard.writeText(l).then(function () { aviso('Link copiado'); }, respaldo); } catch (e) { respaldo(); }
+}
+
+/* ---------- arranque ---------- */
+window.onerror = function (m) { aviso('Error: ' + m); };
+function arrancar(p) {
+  p = p || {};
+  if (p.e && p.k) { entrar({ e: p.e, k: p.k }); return; }
+  google.script.run.withSuccessHandler(function (r) {
+    S.negocio = r.negocio;
+    var pin = leerLocal(CONFIG.LLAVE_PIN);
+    if (pin) entrar({ pin: pin }, true); else pantallaPin();
+  }).withFailureHandler(function () { pantallaPin(); }).api_publico();
+}
+if (window.google && google.script && google.script.url) {
+  google.script.url.getLocation(function (loc) { arrancar(loc.parameter); });
+} else {
+  arrancar({});
+}
+</script>
+</body>
+</html>
