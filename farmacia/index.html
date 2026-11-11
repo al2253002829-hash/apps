@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  :root {
+    --fondo: #F4F3EF; --tarjeta: #FFFFFF; --texto: #2F3437; --suave: #767C80; --linea: #E4E1D8;
+    --acento: #5F8B7B; --acento-claro: #E2ECE7; --arena: #D8CDB8; --arena-claro: #F0EBE1;
+    --azul: #7E95AA; --azul-claro: #E4EAF0; --ok: #6E9C7C; --ok-claro: #E2EEE5;
+    --alerta: #B9806A; --alerta-claro: #F5E6DF;
+    --vencido: #F3DEDA; --vencido-t: #8A3E33; --vencido-b: #C98476;
+    --critico: #F6E3D6; --critico-t: #8A4F2E; --critico-b: #D49C78;
+    --pronto: #F6EDD5; --pronto-t: #7A5E1E; --pronto-b: #D3B46A;
+    --atencion: #EEF0E2; --atencion-t: #56613A; --atencion-b: #A9B37E;
+    --sombra: 0 1px 2px rgba(47,52,55,.05), 0 4px 14px rgba(47,52,55,.05);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--fondo); }
+  body { margin: 0; background: var(--fondo); color: var(--texto); font: 15px/1.45 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .app { max-width: 760px; margin: 0 auto; padding: 14px 16px 96px; }
+  h1 { font: 600 21px/1.2 Georgia, "Times New Roman", serif; margin: 0; }
+  h2 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--suave); margin: 22px 0 10px; font-weight: 600; }
+  .cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .sub { color: var(--suave); font-size: 13px; }
+  .tarjeta { background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 14px; padding: 14px; box-shadow: var(--sombra); }
+  .lista > .tarjeta { margin-bottom: 8px; }
+  .clic { cursor: pointer; }
+  .fila { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .chip { display: inline-block; font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--arena-claro); color: #6B5B43; white-space: nowrap; margin: 2px 2px 0 0; }
+  .chip.verde { background: var(--acento-claro); color: #3F6656; }
+  .chip.azul { background: var(--azul-claro); color: #4A5E73; }
+  .chip.alerta { background: var(--alerta-claro); color: #8A4F3A; }
+  .chip.vencido { background: var(--vencido); color: var(--vencido-t); }
+  .chip.critico { background: var(--critico); color: var(--critico-t); }
+  .chip.pronto { background: var(--pronto); color: var(--pronto-t); }
+  .chip.atencion { background: var(--atencion); color: var(--atencion-t); }
+  button, .btn { appearance: none; border: 0; border-radius: 10px; padding: 11px 14px; font: inherit; font-weight: 600; cursor: pointer; background: var(--acento); color: #fff; text-decoration: none; display: inline-block; text-align: center; }
+  button.sec, .btn.sec { background: var(--arena-claro); color: var(--texto); }
+  button.peligro { background: var(--alerta-claro); color: #8A4F3A; }
+  button:disabled { opacity: .55; cursor: default; }
+  .ancho { width: 100%; }
+  label { display: block; font-size: 12px; color: var(--suave); margin: 10px 0 4px; }
+  input, select, textarea { width: 100%; font: inherit; padding: 10px 11px; border: 1px solid var(--linea); border-radius: 10px; background: #FDFCFA; color: var(--texto); }
+  .rej { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  .filtros { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 2px; }
+  .filtros button { background: var(--tarjeta); color: var(--texto); border: 1px solid var(--linea); font-weight: 500; padding: 7px 12px; white-space: nowrap; }
+  .filtros button.on { background: var(--texto); color: #fff; border-color: var(--texto); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { padding: 8px 4px; border-bottom: 1px solid var(--linea); text-align: left; vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--suave); font-weight: 600; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  .tot td { border: 0; padding: 3px 4px; }
+  .grande { font: 600 26px/1.1 Georgia, serif; }
+  .aviso { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); background: var(--texto); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; display: none; z-index: 20; max-width: 90%; text-align: center; }
+  .cargando { text-align: center; color: var(--suave); padding: 50px 0; }
+  .vacio { text-align: center; color: var(--suave); padding: 26px 0; }
+  .logo { width: 38px; height: 38px; border-radius: 10px; background: var(--acento); color: #fff; display: flex; align-items: center; justify-content: center; font: 600 20px Georgia, serif; flex: 0 0 38px; }
+  .marca { display: flex; gap: 10px; align-items: center; min-width: 0; }
+  .wa { background: #5E9C76; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .kpis .tarjeta { padding: 10px 8px; text-align: center; }
+  .kpis b { display: block; font: 600 19px Georgia, serif; }
+  .kpis span { font-size: 10.5px; color: var(--suave); text-transform: uppercase; letter-spacing: .07em; }
+  .pin { max-width: 320px; margin: 60px auto; text-align: center; }
+  .pin input { text-align: center; font-size: 24px; letter-spacing: .4em; margin: 14px 0; }
+  .volver { background: transparent; color: var(--suave); padding: 6px 0; font-weight: 500; }
+  .nav { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.97); border-top: 1px solid var(--linea); display: flex; justify-content: center; z-index: 10; padding-bottom: env(safe-area-inset-bottom); }
+  .nav button { flex: 1; max-width: 130px; background: transparent; color: var(--suave); border-radius: 0; padding: 9px 2px 10px; font-size: 11px; font-weight: 600; position: relative; }
+  .nav button i { display: block; font-style: normal; font-size: 19px; line-height: 1.2; }
+  .nav button.on { color: var(--acento); }
+  .nav .punto { position: absolute; top: 5px; left: 50%; margin-left: 8px; background: var(--critico-b); color: #fff; border-radius: 99px; font-size: 10px; padding: 0 5px; line-height: 16px; }
+  .selfar { width: auto; max-width: 190px; padding: 8px 10px; font-size: 14px; font-weight: 600; }
+  .buscador { display: flex; gap: 8px; }
+  .buscador input { flex: 1; }
+  .buscador button { flex: 0 0 auto; }
+  .res { margin-top: 8px; }
+  .res .item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 1px solid var(--linea); cursor: pointer; }
+  .res .item:last-child { border-bottom: 0; }
+  .res .item.sin { opacity: .5; cursor: default; }
+  .linea { padding: 10px 0; border-bottom: 1px solid var(--linea); }
+  .linea:last-child { border-bottom: 0; }
+  .cant { display: flex; align-items: center; gap: 6px; }
+  .cant button { width: 34px; height: 34px; padding: 0; background: var(--arena-claro); color: var(--texto); font-size: 18px; }
+  .cant b { min-width: 26px; text-align: center; }
+  .regalo { margin-top: 6px; font-size: 13px; color: #3F6656; background: var(--acento-claro); padding: 5px 9px; border-radius: 8px; display: inline-block; }
+  .pista { margin-top: 6px; font-size: 13px; color: #6B5B43; background: var(--arena-claro); padding: 5px 9px; border-radius: 8px; display: inline-block; }
+  .cad { border-left: 5px solid var(--linea); }
+  .cad.vencido { border-left-color: var(--vencido-b); background: #FCF6F5; }
+  .cad.critico { border-left-color: var(--critico-b); background: #FDF8F4; }
+  .cad.pronto { border-left-color: var(--pronto-b); background: #FDFBF3; }
+  .cad.atencion { border-left-color: var(--atencion-b); background: #FAFBF5; }
+  .leyenda { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+  .leyenda div { border-radius: 12px; padding: 9px 6px; text-align: center; cursor: pointer; border: 2px solid transparent; }
+  .leyenda div.on { border-color: var(--texto); }
+  .leyenda b { display: block; font: 600 20px Georgia, serif; }
+  .leyenda span { font-size: 11px; }
+  .barras { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding-top: 10px; }
+  .barras div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; font-size: 11px; color: var(--suave); }
+  .barras i { display: block; width: 100%; max-width: 46px; background: var(--acento); border-radius: 6px 6px 0 0; min-height: 2px; }
+  .barras div.on i { background: #3F6656; }
+  video { width: 100%; border-radius: 12px; background: #000; max-height: 260px; object-fit: cover; }
+  .ticket { max-width: 420px; margin: 0 auto; }
+  .ok-grande { width: 54px; height: 54px; border-radius: 50%; background: var(--ok); color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; margin: 10px auto; }
+  @media (max-width: 420px) { .kpis b { font-size: 16px; } .leyenda span { font-size: 10px; } }
+</style>
+<script>
+/* ===== Conexion con tu Apps Script (pega aqui tu link /exec) ===== */
+var URL_APPS_SCRIPT = 'PEGA_AQUI_TU_LINK_EXEC';
+window.BASE_PAGINA = location.origin + location.pathname;
+
+(function () {
+  function parametros() {
+    var q = {};
+    location.search.replace(/^\?/, '').split('&').forEach(function (p) {
+      if (!p) return;
+      var kv = p.split('=');
+      q[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || '').replace(/\+/g, ' '));
+    });
+    return q;
+  }
+  function nuevaLlamada() {
+    var ok = function () {}, ko = function () {};
+    var obj = {
+      withSuccessHandler: function (f) { ok = f; return obj; },
+      withFailureHandler: function (f) { ko = f; return obj; }
+    };
+    ['api_publico', 'api_entrar', 'api_stock', 'api_lotes', 'api_cliente', 'api_vender', 'api_entrada', 'api_traslado', 'api_caducar', 'api_ganancias', 'api_movimientos', 'api_links', 'api_correo_prueba'].forEach(function (fn) {
+      obj[fn] = function () {
+        var args = Array.prototype.slice.call(arguments);
+        fetch(URL_APPS_SCRIPT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ fn: fn, args: args })
+        }).then(function (r) { return r.json(); }).then(function (j) {
+          if (j.e) ko(new Error(j.e)); else ok(j.r);
+        }).catch(function () { ko(new Error('Sin conexión con el servidor. Revisa tu internet.')); });
+      };
+    });
+    return obj;
+  }
+  var script = { url: { getLocation: function (cb) { cb({ parameter: parametros() }); } } };
+  Object.defineProperty(script, 'run', { get: nuevaLlamada });
+  window.google = { script: script };
+})();
+</script>
+<title>Farmacias</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Farmacias%22%2C%22display%22%3A%22standalone%22%7D">
+</head>
+<body>
+<div class="app" id="app"><div class="cargando">Cargando…</div></div>
+<div class="nav" id="nav" style="display:none"></div>
+<div class="aviso" id="aviso"></div>
+
+<script>
+/* ===== CONFIG de la pantalla ===== */
+var CONFIG = {
+  MAX_RESULTADOS: 8,          // medicamentos que se muestran al buscar
+  LLAVE_PIN: 'farm_pin',      // donde se recuerda el PIN del dueno en este celular
+  NIVELES: [
+    { c: 'vencido', n: 'Vencido', d: 'Retirar' },
+    { c: 'critico', n: '< 1 mes', d: 'Urgente' },
+    { c: 'pronto', n: '1 a 2 meses', d: 'Pronto' },
+    { c: 'atencion', n: '2 a 4 meses', d: 'Atención' }
+  ]
+};
+
+var S = {
+  ses: null, d: null, farmacia: '', vista: 'vender', stock: {}, carrito: [], cliente: null,
+  filtroCad: '', cad: [], buscarInv: '', mes: '', escaner: null
+};
+
+/* ---------- utilidades ---------- */
+function $(id) { return document.getElementById(id); }
+function esc(v) {
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function dinero(n) {
+  return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function red(n) { return Math.round(n * 100) / 100; }
+function aviso(t) {
+  var a = $('aviso'); a.textContent = t; a.style.display = 'block';
+  clearTimeout(aviso.t); aviso.t = setTimeout(function () { a.style.display = 'none'; }, 3000);
+}
+function llamar(fn, args, ok, fallo) {
+  var r = google.script.run.withSuccessHandler(ok).withFailureHandler(function (e) {
+    var msg = (e && e.message) ? e.message : String(e);
+    aviso(msg);
+    if (fallo) fallo(msg);
+  });
+  r[fn].apply(r, args);
+}
+function guardarLocal(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function leerLocal(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+function dueno() { return S.d && S.d.rol === 'dueno'; }
+function nombreFarmacia(id) {
+  var f = (S.d.farmacias || []).filter(function (x) { return x.id === id; })[0];
+  return f ? f.nombre : id;
+}
+function producto(codigo) {
+  for (var i = 0; i < S.d.catalogo.length; i++) if (String(S.d.catalogo[i].codigo) === String(codigo)) return S.d.catalogo[i];
+  return null;
+}
+function sinAcentos(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function promoDe(codigo) {
+  var p = S.d.promos[S.farmacia] || {};
+  return p[codigo] || null;
+}
+function disponible(codigo) { var s = S.stock[codigo]; return s ? s.total : 0; }
+function opcionesFarmacias(sel, conTodas) {
+  var h = conTodas ? '<option value="">Todas las farmacias</option>' : '';
+  S.d.farmacias.forEach(function (f) { h += '<option value="' + esc(f.id) + '"' + (f.id === sel ? ' selected' : '') + '>' + esc(f.nombre) + '</option>'; });
+  return h;
+}
+
+/* ---------- entrada ---------- */
+function pantallaPin(msg) {
+  $('nav').style.display = 'none';
+  $('app').innerHTML = '<div class="pin tarjeta"><div class="logo" style="margin:0 auto 10px">+</div>' +
+    '<h1>' + esc(S.negocio || 'Farmacias') + '</h1><div class="sub">Acceso del dueño</div>' +
+    '<input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">' +
+    '<button class="ancho" id="bpin" onclick="entrar({ pin: $(\'pin\').value })">Entrar</button>' +
+    (msg ? '<div class="sub" style="margin-top:10px;color:#8A4F3A">' + esc(msg) + '</div>' : '') +
+    '<div class="sub" style="margin-top:14px">¿Eres de una farmacia? Abre el link que te mandaron por WhatsApp.</div></div>';
+  var i = $('pin'); i.focus();
+  i.onkeydown = function (e) { if (e.key === 'Enter') entrar({ pin: i.value }); };
+}
+function entrar(ses, auto) {
+  if ($('bpin')) $('bpin').disabled = true;
+  google.script.run.withSuccessHandler(function (r) {
+    S.ses = ses; S.d = r;
+    if (ses.pin) guardarLocal(CONFIG.LLAVE_PIN, ses.pin);
+    S.farmacia = r.rol === 'dueno' ? (leerLocal('farm_sel') || '') : r.farmacia;
+    if (S.farmacia && !r.farmacias.some(function (f) { return f.id === S.farmacia; })) S.farmacia = '';
+    cargarStock(function () { ir(S.vista); });
+  }).withFailureHandler(function (e) {
+    var m = e && e.message ? e.message : 'No se pudo entrar';
+    if (ses.pin) { guardarLocal(CONFIG.LLAVE_PIN, ''); pantallaPin(auto ? '' : m); }
+    else $('app').innerHTML = '<div class="vacio">' + esc(m) + '</div>';
+  }).api_entrar(ses);
+}
+function salir() { guardarLocal(CONFIG.LLAVE_PIN, ''); S.ses = null; S.d = null; pantallaPin(); }
+
+function cargarStock(cb) {
+  llamar('api_stock', [S.ses, S.farmacia], function (lista) {
+    S.stock = {};
+    lista.forEach(function (x) { S.stock[x.codigo] = x; });
+    if (cb) cb();
+  });
+}
+function cambiarFarmacia(id) {
+  S.farmacia = id; guardarLocal('farm_sel', id);
+  S.carrito = []; S.cliente = null;
+  $('app').innerHTML = '<div class="cargando">Cargando…</div>';
+  cargarStock(function () { ir(S.vista); });
+}
+
+/* ---------- navegacion ---------- */
+function ir(v) {
+  pararEscaner();
+  S.vista = v;
+  var tabs = [['vender', '&#128722;', 'Vender'], ['inventario', '&#128230;', 'Inventario'], ['caducar', '&#9203;', 'Por caducar'], ['traslados', '&#8644;', 'Traslados']];
+  if (dueno()) { tabs.push(['ganancias', '&#128200;', 'Ganancias']); tabs.push(['farmacias', '&#9881;', 'Farmacias']); }
+  var h = '';
+  tabs.forEach(function (t) {
+    h += '<button class="' + (v === t[0] ? 'on' : '') + '" onclick="ir(\'' + t[0] + '\')"><i>' + t[1] + '</i>' + t[2] +
+      (t[0] === 'caducar' && S.d.porCaducar ? '<span class="punto">' + S.d.porCaducar + '</span>' : '') + '</button>';
+  });
+  $('nav').innerHTML = h; $('nav').style.display = 'flex';
+  window.scrollTo(0, 0);
+  if (v === 'vender') pintarVender();
+  else if (v === 'inventario') pintarInventario();
+  else if (v === 'caducar') cargarCaducar();
+  else if (v === 'traslados') cargarTraslados();
+  else if (v === 'ganancias') cargarGanancias();
+  else if (v === 'farmacias') cargarFarmacias();
+}
+function cabecera(titulo, conTodas) {
+  var sel = dueno()
+    ? '<select class="selfar" onchange="cambiarFarmacia(this.value)">' + opcionesFarmacias(S.farmacia, conTodas !== false) + '</select>'
+    : '<span class="chip verde">' + esc(nombreFarmacia(S.farmacia)) + '</span>';
+  return '<div class="cab"><div class="marca"><div class="logo">+</div><div><h1>' + esc(titulo) + '</h1>' +
+    '<div class="sub">' + esc(S.d.negocio) + '</div></div></div>' + sel + '</div>';
+}
+
+/* =========================================================
+   VENDER
+   ========================================================= */
+function pintarVender() {
+  var h = cabecera('Vender');
+  if (!S.farmacia) {
+    h += '<div class="tarjeta vacio">Elige arriba en qué farmacia se hace la venta.</div>';
+    $('app').innerHTML = h; return;
+  }
+  h += '<div class="tarjeta"><div class="buscador"><input id="q" placeholder="Buscar medicamento o escanear código" autocomplete="off">' +
+    ('BarcodeDetector' in window ? '<button class="sec" onclick="escanear()" title="Escanear con la cámara">&#128247;</button>' : '') + '</div>' +
+    '<div id="cam"></div><div class="res" id="res"></div></div>';
+  h += '<h2>Venta</h2><div class="tarjeta"><div id="carrito"></div>' +
+    '<label>Código de cliente de mayoreo (opcional)</label><div class="buscador"><input id="cod_cli" placeholder="Ej. MAY-001" autocomplete="off" style="text-transform:uppercase">' +
+    '<button class="sec" onclick="aplicarCliente()">Aplicar</button></div><div id="cli_info"></div>' +
+    '<div id="totales" style="margin-top:12px"></div>' +
+    '<button class="ancho" id="b_vender" style="margin-top:12px" onclick="registrarVenta()">Registrar venta</button></div>';
+  h += '<div id="mov"></div>';
+  $('app').innerHTML = h;
+  var q = $('q');
+  q.oninput = function () { buscar(q.value); };
+  q.onkeydown = function (e) {
+    if (e.key === 'Enter') {
+      var v = q.value.trim();
+      var p = producto(v);
+      if (p) { agregar(p.codigo); q.value = ''; buscar(''); }
+      else {
+        var r = resultados(v);
+        if (r.length === 1) { agregar(r[0].codigo); q.value = ''; buscar(''); }
+      }
+    }
+  };
+  $('cod_cli').onkeydown = function (e) { if (e.key === 'Enter') aplicarCliente(); };
+  if (S.cliente) $('cod_cli').value = S.cliente.codigo;
+  pintarCarrito();
+  pintarCliente();
+  cargarMovVentas();
+}
+function resultados(txt) {
+  var t = sinAcentos(txt.trim());
+  if (!t) return [];
+  return S.d.catalogo.filter(function (p) {
+    return sinAcentos(p.nombre + ' ' + p.presentacion + ' ' + p.laboratorio).indexOf(t) >= 0 || String(p.codigo).indexOf(t) === 0;
+  }).slice(0, CONFIG.MAX_RESULTADOS);
+}
+function buscar(txt) {
+  var r = resultados(txt), h = '';
+  if (txt.trim() && !r.length) h = '<div class="sub" style="padding:8px 4px">No está en el catálogo.</div>';
+  r.forEach(function (p) {
+    var hay = disponible(p.codigo), pr = promoDe(p.codigo);
+    h += '<div class="item' + (hay > 0 ? '' : ' sin') + '"' + (hay > 0 ? ' onclick="agregar(\'' + esc(p.codigo) + '\');$(\'q\').value=\'\';buscar(\'\')"' : '') + '>' +
+      '<div><b>' + esc(p.nombre) + '</b><div class="sub">' + esc(p.presentacion) + ' · ' + (hay > 0 ? hay + ' disponibles' : 'Sin existencia') + '</div>' +
+      (pr ? '<span class="chip verde">Promo ' + esc(pr.texto) + '</span>' : '') + '</div><b>' + dinero(p.precio) + '</b></div>';
+  });
+  $('res').innerHTML = h;
+}
+function agregar(codigo) {
+  var p = producto(codigo);
+  if (!p) return;
+  for (var i = 0; i < S.carrito.length; i++) {
+    if (S.carrito[i].codigo === p.codigo) { cambiarCant(i, 1); return; }
+  }
+  S.carrito.push({ codigo: p.codigo, cantidad: 1 });
+  pintarCarrito();
+  aviso(p.nombre + ' agregado');
+}
+function cambiarCant(i, d) {
+  var x = S.carrito[i];
+  var n = x.cantidad + d;
+  if (n <= 0) { S.carrito.splice(i, 1); pintarCarrito(); return; }
+  var l = calcular(x.codigo, n);
+  if (l.cantidad + l.regalo > disponible(x.codigo)) { aviso('Solo hay ' + disponible(x.codigo) + ' disponibles'); return; }
+  x.cantidad = n;
+  pintarCarrito();
+}
+/* Misma regla que el servidor: promo N+M y descuento de mayoreo */
+function calcular(codigo, cant) {
+  var p = producto(codigo), pr = promoDe(codigo);
+  var desc = S.cliente ? S.cliente.descuento : 0;
+  var usar = pr && (S.d.promoConDescuento || !desc);
+  var regalo = usar ? Math.floor(cant / pr.compra) * pr.regalo : 0;
+  var bruto = red(cant * p.precio);
+  return { p: p, pr: usar ? pr : null, prIgnorada: pr && !usar, cantidad: cant, regalo: regalo, bruto: bruto, importe: red(bruto * (1 - desc)), desc: desc };
+}
+function pintarCarrito() {
+  var c = $('carrito'); if (!c) return;
+  if (!S.carrito.length) { c.innerHTML = '<div class="sub" style="padding:4px 0 8px">Busca o escanea un medicamento para empezar.</div>'; totales(); return; }
+  var h = '';
+  S.carrito.forEach(function (x, i) {
+    var l = calcular(x.codigo, x.cantidad);
+    h += '<div class="linea"><div class="fila"><div style="min-width:0"><b>' + esc(l.p.nombre) + '</b><div class="sub">' + dinero(l.p.precio) + ' c/u</div></div>' +
+      '<div class="cant"><button onclick="cambiarCant(' + i + ',-1)">&#8722;</button><b>' + x.cantidad + '</b><button onclick="cambiarCant(' + i + ',1)">+</button></div>' +
+      '<b style="min-width:84px;text-align:right">' + dinero(l.importe) + '</b></div>';
+    if (l.regalo) h += '<span class="regalo">&#127873; +' + l.regalo + ' de regalo (promo ' + esc(l.pr.texto) + ')</span>';
+    else if (l.pr) {
+      var faltan = l.pr.compra - (x.cantidad % l.pr.compra);
+      h += '<span class="pista">Promo ' + esc(l.pr.texto) + ': si lleva ' + faltan + ' más, se le regala' + (l.pr.regalo > 1 ? 'n ' + l.pr.regalo : ' 1') + '</span>';
+    } else if (l.prIgnorada) h += '<span class="pista">Tiene promo ' + esc(l.prIgnorada.texto || promoDe(x.codigo).texto) + ', pero al cliente de mayoreo se le aplica su descuento</span>';
+    h += '</div>';
+  });
+  c.innerHTML = h;
+  totales();
+}
+function totales() {
+  var t = $('totales'); if (!t) return;
+  var bruto = 0, imp = 0, regalos = 0, valorReg = 0;
+  S.carrito.forEach(function (x) {
+    var l = calcular(x.codigo, x.cantidad);
+    bruto += l.bruto; imp += l.importe; regalos += l.regalo; valorReg += l.regalo * l.p.precio;
+  });
+  var h = '<table class="tot"><tr><td class="sub">Subtotal</td><td class="n sub">' + dinero(bruto) + '</td></tr>';
+  if (regalos) h += '<tr><td class="sub">Regalo por promoción (' + regalos + ' pza)</td><td class="n sub">' + dinero(valorReg) + ' gratis</td></tr>';
+  if (S.cliente && bruto - imp > 0) h += '<tr><td class="sub">Descuento mayoreo ' + Math.round(S.cliente.descuento * 100) + '%</td><td class="n sub">&#8722;' + dinero(bruto - imp) + '</td></tr>';
+  h += '<tr><td><b>Total a cobrar</b></td><td class="n grande">' + dinero(imp) + '</td></tr></table>';
+  t.innerHTML = h;
+  if ($('b_vender')) $('b_vender').disabled = !S.carrito.length;
+}
+function aplicarCliente() {
+  var cod = $('cod_cli').value.trim().toUpperCase();
+  if (!cod) { S.cliente = null; pintarCliente(); pintarCarrito(); return; }
+  $('cli_info').innerHTML = '<div class="sub" style="margin-top:6px">Buscando…</div>';
+  llamar('api_cliente', [S.ses, cod], function (c) {
+    S.cliente = c; pintarCliente(); pintarCarrito();
+    aviso('Descuento de ' + Math.round(c.descuento * 100) + '% aplicado');
+  }, function (m) { S.cliente = null; $('cli_info').innerHTML = '<div class="sub" style="margin-top:6px;color:#8A4F3A">' + esc(m) + '</div>'; pintarCarrito(); });
+}
+function pintarCliente() {
+  var c = $('cli_info'); if (!c) return;
+  c.innerHTML = S.cliente ? '<div class="fila" style="margin-top:8px"><span><span class="chip verde">' + esc(S.cliente.codigo) + '</span> <b>' + esc(S.cliente.nombre) + '</b> · ' +
+    Math.round(S.cliente.descuento * 100) + '% de descuento</span><button class="volver" onclick="quitarCliente()">Quitar</button></div>' : '';
+}
+function quitarCliente() { S.cliente = null; $('cod_cli').value = ''; pintarCliente(); pintarCarrito(); }
+function registrarVenta() {
+  if (!S.carrito.length) return;
+  var b = $('b_vender'); b.disabled = true; b.textContent = 'Registrando…';
+  llamar('api_vender', [S.ses, S.farmacia, S.carrito, S.cliente ? S.cliente.codigo : '', ''], function (r) {
+    S.carrito = []; S.cliente = null;
+    pintarTicket(r);
+    cargarStock();
+  }, function () { b.disabled = false; b.textContent = 'Registrar venta'; });
+}
+function pintarTicket(r) {
+  var h = '<div class="ticket"><div class="ok-grande">&#10003;</div><h1 style="text-align:center">Venta registrada</h1>' +
+    '<div class="sub" style="text-align:center;margin-bottom:14px">' + esc(r.folio) + ' · ' + esc(r.fecha) + ' · ' + esc(nombreFarmacia(S.farmacia)) + '</div>' +
+    '<div class="tarjeta"><table><tr><th>Medicamento</th><th class="n">Cant.</th><th class="n">Importe</th></tr>';
+  r.lineas.forEach(function (l) {
+    h += '<tr><td>' + esc(l.nombre) + (l.regalo ? '<br><span class="regalo">+' + l.regalo + ' de regalo (' + esc(l.promo) + ')</span>' : '') + '</td><td class="n">' + l.cantidad + '</td><td class="n">' + dinero(l.importe) + '</td></tr>';
+  });
+  h += '</table>' + (r.cliente ? '<div class="sub" style="margin-top:8px">Cliente: ' + esc(r.cliente.nombre) + ' (' + Math.round(r.cliente.descuento * 100) + '% mayoreo)</div>' : '') +
+    '<table class="tot" style="margin-top:8px">' + (r.ahorro ? '<tr><td class="sub">El cliente se ahorró</td><td class="n sub">' + dinero(r.ahorro) + '</td></tr>' : '') +
+    '<tr><td><b>Total cobrado</b></td><td class="n grande">' + dinero(r.total) + '</td></tr></table></div>' +
+    '<button class="ancho" style="margin-top:14px" onclick="ir(\'vender\')">Nueva venta</button></div>';
+  $('app').innerHTML = h;
+}
+function cargarMovVentas() {
+  llamar('api_movimientos', [S.ses, S.farmacia], function (m) {
+    if (S.vista !== 'vender' || !$('mov')) return;
+    var h = '<h2>Hoy en ' + esc(nombreFarmacia(S.farmacia)) + '</h2><div class="kpis"><div class="tarjeta"><b>' + dinero(m.hoy.total) + '</b><span>Vendido</span></div>' +
+      '<div class="tarjeta"><b>' + m.hoy.tickets + '</b><span>Ventas</span></div><div class="tarjeta"><b>' + m.hoy.piezas + '</b><span>Piezas</span></div></div>';
+    var v = m.ventas.slice(0, 8);
+    if (v.length) {
+      h += '<div class="tarjeta"><table><tr><th>Venta</th><th>Cliente</th><th class="n">Total</th></tr>';
+      v.forEach(function (t) {
+        h += '<tr><td>' + esc(t.folio) + '<div class="sub">' + esc(t.fecha) + '</div></td><td>' + esc(t.cliente || 'Mostrador') +
+          (t.regalo ? '<br><span class="chip verde">' + t.regalo + ' regalo</span>' : '') + (t.desc ? '<br><span class="chip azul">Mayoreo</span>' : '') + '</td><td class="n">' + dinero(t.total) + '</td></tr>';
+      });
+      h += '</table></div>';
+    }
+    $('mov').innerHTML = h;
+  });
+}
+
+/* ---------- escaner con camara (Chrome Android) ---------- */
+function escanear() {
+  if (S.escaner) { pararEscaner(); return; }
+  var det;
+  try { det = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'] }); } catch (e) { aviso('Tu navegador no puede escanear. Usa el buscador.'); return; }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (st) {
+    $('cam').innerHTML = '<video id="vid" playsinline muted style="margin-top:10px"></video><button class="sec ancho" style="margin-top:6px" onclick="pararEscaner()">Cerrar cámara</button>';
+    var v = $('vid'); v.srcObject = st; v.play();
+    S.escaner = { st: st, on: true };
+    var leer = function () {
+      if (!S.escaner || !S.escaner.on) return;
+      det.detect(v).then(function (cs) {
+        if (cs.length) {
+          var cod = cs[0].rawValue;
+          var p = producto(cod);
+          if (p) { agregar(p.codigo); if (navigator.vibrate) navigator.vibrate(80); pararEscaner(); return; }
+          aviso('Código ' + cod + ' no está en el catálogo');
+        }
+        setTimeout(leer, 350);
+      }).catch(function () { setTimeout(leer, 500); });
+    };
+    leer();
+  }).catch(function () { aviso('No se pudo abrir la cámara'); });
+}
+function pararEscaner() {
+  if (!S.escaner) return;
+  S.escaner.on = false;
+  try { S.escaner.st.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+  S.escaner = null;
+  if ($('cam')) $('cam').innerHTML = '';
+}
+
+/* =========================================================
+   INVENTARIO
+   ========================================================= */
+function pintarInventario() {
+  var h = cabecera('Inventario');
+  h += '<div class="buscador" style="margin-bottom:10px"><input id="qi" placeholder="Buscar en el inventario" value="' + esc(S.buscarInv) + '">' +
+    (S.farmacia ? '<button onclick="formEntrada()">+ Entrada</button>' : '') + '</div><div class="lista" id="inv"></div>';
+  $('app').innerHTML = h;
+  $('qi').oninput = function () { S.buscarInv = this.value; listaInventario(); };
+  listaInventario();
+}
+function listaInventario() {
+  var t = sinAcentos(S.buscarInv.trim()), h = '';
+  var lista = S.d.catalogo.filter(function (p) { return !t || sinAcentos(p.nombre + ' ' + p.presentacion).indexOf(t) >= 0 || String(p.codigo).indexOf(t) === 0; });
+  var bajos = 0;
+  lista.forEach(function (p) {
+    var s = S.stock[p.codigo] || { total: 0, por: {}, vencido: 0, proxDias: 99999 };
+    var minimo = S.farmacia ? p.minimo : p.minimo * S.d.farmacias.length;
+    var bajo = minimo && s.total < minimo;
+    if (bajo) bajos++;
+    var cls = s.proxDias <= 120 ? (s.proxDias <= 30 ? 'critico' : (s.proxDias <= 60 ? 'pronto' : 'atencion')) : '';
+    h += '<div class="tarjeta clic" onclick="detalle(\'' + esc(p.codigo) + '\')"><div class="fila"><div style="min-width:0"><b>' + esc(p.nombre) + '</b>' +
+      '<div class="sub">' + esc(p.presentacion) + ' · ' + esc(p.codigo) + '</div><div>';
+    if (!S.farmacia) S.d.farmacias.forEach(function (f) { h += '<span class="chip">' + esc(f.nombre) + ': ' + (s.por[f.id] || 0) + '</span>'; });
+    if (bajo) h += '<span class="chip alerta">Stock bajo</span>';
+    if (cls) h += '<span class="chip ' + cls + '">Caduca ' + esc(s.prox) + '</span>';
+    if (s.vencido) h += '<span class="chip vencido">' + s.vencido + ' vencidos</span>';
+    h += '</div></div><div style="text-align:right"><div class="grande">' + s.total + '</div><div class="sub">piezas</div></div></div></div>';
+  });
+  if (!lista.length) h = '<div class="vacio">No se encontró nada.</div>';
+  $('inv').innerHTML = (bajos ? '<div class="sub" style="margin-bottom:8px">' + bajos + ' medicamento(s) con stock bajo</div>' : '') + h;
+}
+function detalle(codigo) {
+  var p = producto(codigo);
+  S.vista = 'detalle';
+  $('app').innerHTML = '<button class="volver" onclick="ir(\'inventario\')">&#8592; Inventario</button><h1>' + esc(p.nombre) + '</h1>' +
+    '<div class="sub">' + esc(p.presentacion) + ' · ' + esc(p.laboratorio) + ' · ' + esc(p.codigo) + '</div>' +
+    '<div class="kpis" style="margin-top:12px"><div class="tarjeta"><b>' + dinero(p.precio) + '</b><span>Precio</span></div>' +
+    (dueno() ? '<div class="tarjeta"><b>' + dinero(p.costo) + '</b><span>Costo</span></div>' : '') +
+    '<div class="tarjeta"><b>' + disponible(codigo) + '</b><span>Disponibles</span></div></div>' +
+    '<h2>Lotes</h2><div class="tarjeta" id="lotes"><div class="cargando" style="padding:14px">Cargando…</div></div>' +
+    '<div class="rej" style="margin-top:12px">' + (S.farmacia ? '<button class="sec" onclick="formEntrada(\'' + esc(codigo) + '\')">+ Entrada</button>' : '<span></span>') +
+    '<button onclick="formTraslado(\'' + esc(codigo) + '\')">Trasladar</button></div>';
+  llamar('api_lotes', [S.ses, S.farmacia, codigo], function (ls) {
+    var h = '<table><tr>' + (S.farmacia ? '' : '<th>Farmacia</th>') + '<th>Lote</th><th>Caduca</th><th class="n">Piezas</th></tr>';
+    ls.forEach(function (l) {
+      h += '<tr>' + (S.farmacia ? '' : '<td>' + esc(nombreFarmacia(l.farmacia)) + '</td>') + '<td>' + esc(l.lote) + '</td><td>' + esc(l.caducidad) +
+        (l.clase ? ' <span class="chip ' + l.clase + '">' + (l.dias < 0 ? 'Vencido' : l.dias + ' días') + '</span>' : '') + '</td><td class="n">' + l.cantidad + '</td></tr>';
+    });
+    if (!ls.length) h = '<div class="vacio">Sin existencia.</div>'; else h += '</table>';
+    $('lotes').innerHTML = h;
+  });
+}
+function selProductos(id, sel) {
+  var h = '<select id="' + id + '"><option value="">Elige el medicamento…</option>';
+  S.d.catalogo.forEach(function (p) { h += '<option value="' + esc(p.codigo) + '"' + (String(p.codigo) === String(sel) ? ' selected' : '') + '>' + esc(p.nombre) + ' · ' + esc(p.presentacion) + '</option>'; });
+  return h + '</select>';
+}
+function formEntrada(codigo) {
+  S.vista = 'entrada';
+  $('app').innerHTML = '<button class="volver" onclick="ir(\'inventario\')">&#8592; Inventario</button><h1>Entrada de mercancía</h1>' +
+    '<div class="sub">' + esc(nombreFarmacia(S.farmacia)) + '</div><div class="tarjeta" style="margin-top:12px">' +
+    '<label>Medicamento</label>' + selProductos('e_cod', codigo || '') +
+    '<div class="rej"><div><label>Lote</label><input id="e_lote" placeholder="Ej. PA-2501"></div><div><label>Caducidad</label><input id="e_cad" type="date"></div></div>' +
+    '<div class="rej"><div><label>Piezas</label><input id="e_cant" inputmode="numeric"></div>' +
+    (dueno() ? '<div><label>Costo por pieza (opcional)</label><input id="e_costo" inputmode="decimal"></div>' : '<div></div>') + '</div>' +
+    '<label>Nota (opcional)</label><input id="e_nota" placeholder="Ej. Factura del proveedor">' +
+    '<button class="ancho" id="b_ent" style="margin-top:14px" onclick="guardarEntrada()">Guardar entrada</button></div>';
+}
+function guardarEntrada() {
+  var d = { codigo: $('e_cod').value, lote: $('e_lote').value, caducidad: $('e_cad').value, cantidad: $('e_cant').value,
+    costo: $('e_costo') ? $('e_costo').value : '', nota: $('e_nota').value };
+  if (!d.codigo || !d.cantidad || !d.caducidad) { aviso('Falta medicamento, piezas o caducidad'); return; }
+  $('b_ent').disabled = true;
+  llamar('api_entrada', [S.ses, S.farmacia, d], function (r) {
+    aviso(r.cantidad + ' piezas de ' + r.nombre + ' agregadas');
+    cargarStock(function () { ir('inventario'); });
+  }, function () { $('b_ent').disabled = false; });
+}
+
+/* =========================================================
+   POR CADUCAR
+   ========================================================= */
+function cargarCaducar() {
+  $('app').innerHTML = cabecera('Por caducar') + '<div class="cargando">Cargando…</div>';
+  llamar('api_caducar', [S.ses, S.farmacia], function (l) { S.cad = l; if (!S.farmacia) S.d.porCaducar = l.length; pintarCaducar(); });
+}
+function filtrarCad(c) { S.filtroCad = S.filtroCad === c ? '' : c; pintarCaducar(); }
+function pintarCaducar() {
+  var cuenta = {};
+  S.cad.forEach(function (x) { cuenta[x.clase] = (cuenta[x.clase] || 0) + 1; });
+  var h = cabecera('Por caducar') + '<div class="sub" style="margin-bottom:10px">Lotes que caducan en los próximos ' + S.d.mesesAviso + ' meses. Toca un color para filtrar.</div><div class="leyenda">';
+  CONFIG.NIVELES.forEach(function (n) {
+    h += '<div class="' + (S.filtroCad === n.c ? 'on' : '') + '" style="background:var(--' + n.c + ');color:var(--' + n.c + '-t)" onclick="filtrarCad(\'' + n.c + '\')">' +
+      '<b>' + (cuenta[n.c] || 0) + '</b><span>' + esc(n.n) + '</span></div>';
+  });
+  h += '</div><div class="lista">';
+  var vis = S.cad.filter(function (x) { return !S.filtroCad || x.clase === S.filtroCad; });
+  if (!vis.length) h += '<div class="vacio">Nada por caducar aquí. &#128077;</div>';
+  vis.forEach(function (x) {
+    var cuando = x.dias < 0 ? 'Venció hace ' + (-x.dias) + ' días' : (x.dias === 0 ? 'Caduca hoy' : 'Caduca en ' + x.dias + ' días');
+    h += '<div class="tarjeta cad ' + x.clase + '"><div class="fila"><div style="min-width:0"><b>' + esc(x.nombre) + '</b>' +
+      '<div class="sub">Lote ' + esc(x.lote) + ' · ' + esc(x.caducidad) + (S.farmacia ? '' : ' · ' + esc(x.farmaciaNombre)) + '</div>' +
+      '<span class="chip ' + x.clase + '">' + cuando + '</span>' + (x.promo ? '<span class="chip verde">Promo ' + esc(x.promo) + ' activa</span>' : '') +
+      (x.dias < 0 ? '<span class="chip vencido">Retirar del anaquel</span>' : '') + '</div>' +
+      '<div style="text-align:right"><div class="grande">' + x.cantidad + '</div><div class="sub">piezas</div></div></div></div>';
+  });
+  h += '</div>';
+  if (dueno()) h += '<button class="sec ancho" style="margin-top:10px" id="b_mail" onclick="correoPrueba()">Mandar el aviso por correo ahora</button>';
+  $('app').innerHTML = h;
+}
+function correoPrueba() {
+  $('b_mail').disabled = true;
+  llamar('api_correo_prueba', [S.ses], function (r) { aviso(r); $('b_mail').disabled = false; }, function () { $('b_mail').disabled = false; });
+}
+
+/* =========================================================
+   TRASLADOS
+   ========================================================= */
+function cargarTraslados() {
+  $('app').innerHTML = cabecera('Traslados') + '<div class="cargando">Cargando…</div>';
+  llamar('api_movimientos', [S.ses, S.farmacia], function (m) {
+    if (S.vista !== 'traslados') return;
+    var h = cabecera('Traslados') + '<button class="ancho" onclick="formTraslado()">+ Mandar medicamento a otra farmacia</button><h2>Últimos traslados</h2><div class="lista">';
+    if (!m.traslados.length) h += '<div class="vacio">Todavía no hay traslados.</div>';
+    m.traslados.forEach(function (t) {
+      var sale = S.farmacia && t.origen === S.farmacia;
+      h += '<div class="tarjeta"><div class="fila"><div><b>' + esc(t.nombre) + '</b><div class="sub">' + esc(t.folio) + ' · ' + esc(t.fecha) + '</div>' +
+        '<span class="chip">' + esc(nombreFarmacia(t.origen)) + ' &#8594; ' + esc(nombreFarmacia(t.destino)) + '</span>' +
+        (S.farmacia ? '<span class="chip ' + (sale ? 'alerta' : 'verde') + '">' + (sale ? 'Enviado' : 'Recibido') + '</span>' : '') +
+        (t.nota ? '<div class="sub">' + esc(t.nota) + '</div>' : '') + '</div><div class="grande">' + (S.farmacia ? (sale ? '&#8722;' : '+') : '') + t.cantidad + '</div></div></div>';
+    });
+    $('app').innerHTML = h + '</div>';
+  });
+}
+function formTraslado(codigo) {
+  S.vista = 'traslado';
+  var origen = S.farmacia || (S.d.farmacias[0] && S.d.farmacias[0].id);
+  var h = '<button class="volver" onclick="ir(\'traslados\')">&#8592; Traslados</button><h1>Trasladar medicamento</h1>' +
+    '<div class="sub">Se manda primero lo que caduca antes. El inventario se mueve al momento.</div><div class="tarjeta" style="margin-top:12px">';
+  h += '<div class="rej"><div><label>Sale de</label>' + (dueno() ? '<select id="t_or" onchange="destinos()">' + opcionesFarmacias(origen, false) + '</select>'
+    : '<input disabled value="' + esc(nombreFarmacia(S.farmacia)) + '"><input type="hidden" id="t_or" value="' + esc(S.farmacia) + '">') + '</div>' +
+    '<div><label>Va a</label><select id="t_de"></select></div></div>' +
+    '<label>Medicamento</label>' + selProductos('t_cod', codigo || '') +
+    '<div class="rej"><div><label>Piezas</label><input id="t_cant" inputmode="numeric"></div><div><label>Nota (opcional)</label><input id="t_nota" placeholder="Ej. Lo pidió el cliente"></div></div>' +
+    '<button class="ancho" id="b_tras" style="margin-top:14px" onclick="guardarTraslado()">Trasladar</button></div>';
+  $('app').innerHTML = h;
+  destinos();
+}
+function destinos() {
+  var o = $('t_or').value, h = '';
+  S.d.farmacias.forEach(function (f) { if (f.id !== o) h += '<option value="' + esc(f.id) + '">' + esc(f.nombre) + '</option>'; });
+  $('t_de').innerHTML = h;
+}
+function guardarTraslado() {
+  var o = $('t_or').value, d = $('t_de').value, c = $('t_cod').value, n = $('t_cant').value;
+  if (!d || !c || !n) { aviso('Falta destino, medicamento o piezas'); return; }
+  $('b_tras').disabled = true;
+  llamar('api_traslado', [S.ses, o, d, c, n, $('t_nota').value], function (r) {
+    aviso(r.folio + ': ' + r.cantidad + ' de ' + r.nombre + ' enviados a ' + nombreFarmacia(d));
+    cargarStock(function () { ir('traslados'); });
+  }, function () { $('b_tras').disabled = false; });
+}
+
+/* =========================================================
+   GANANCIAS (solo dueno)
+   ========================================================= */
+function mesActual() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2); }
+var MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+function cargarGanancias() {
+  if (!S.mes) S.mes = mesActual();
+  $('app').innerHTML = '<div class="cargando">Calculando…</div>';
+  llamar('api_ganancias', [S.ses, S.mes], pintarGanancias);
+}
+function pintarGanancias(g) {
+  var t = g.total;
+  var margen = t.ventas ? Math.round(t.ganancia / t.ventas * 100) : 0;
+  var h = '<div class="cab"><div class="marca"><div class="logo">+</div><div><h1>Ganancia del mes</h1><div class="sub">Todas las farmacias</div></div></div>' +
+    '<input type="month" class="selfar" value="' + esc(g.mes) + '" onchange="S.mes=this.value;cargarGanancias()"></div>';
+  h += '<div class="kpis"><div class="tarjeta"><b>' + dinero(t.ventas) + '</b><span>Ventas</span></div>' +
+    '<div class="tarjeta"><b>' + dinero(t.ganancia) + '</b><span>Ganancia</span></div>' +
+    '<div class="tarjeta"><b>' + margen + '%</b><span>Margen</span></div></div>';
+  h += '<h2>Por farmacia</h2><div class="tarjeta" style="overflow-x:auto"><table><tr><th>Farmacia</th><th class="n">Ventas</th><th class="n">Costo</th><th class="n">Ganancia</th><th class="n">Tickets</th></tr>';
+  g.farmacias.forEach(function (f) {
+    h += '<tr><td><b>' + esc(f.nombre) + '</b></td><td class="n">' + dinero(f.ventas) + '</td><td class="n">' + dinero(f.costo) + '</td><td class="n"><b>' + dinero(f.ganancia) + '</b></td><td class="n">' + f.tickets + '</td></tr>';
+  });
+  h += '<tr><td><b>Total</b></td><td class="n"><b>' + dinero(t.ventas) + '</b></td><td class="n">' + dinero(t.costo) + '</td><td class="n"><b>' + dinero(t.ganancia) + '</b></td><td class="n">' + t.tickets + '</td></tr></table></div>';
+
+  h += '<h2>Regalías (lo regalado en promociones)</h2><div class="tarjeta">';
+  h += '<div class="fila" style="margin-bottom:6px"><span><b>' + t.regaladas + '</b> piezas regaladas</span><span class="sub">Te costaron ' + dinero(t.costoRegalos) + '</span></div>';
+  if (g.regalos.length) {
+    h += '<table><tr><th>Medicamento</th><th>Farmacia</th><th class="n">Piezas</th><th class="n">Costo</th></tr>';
+    g.regalos.forEach(function (r) { h += '<tr><td>' + esc(r.nombre) + ' <span class="chip verde">' + esc(r.promo) + '</span></td><td>' + esc(r.farmacia) + '</td><td class="n">' + r.piezas + '</td><td class="n">' + dinero(r.costo) + '</td></tr>'; });
+    h += '</table>';
+  } else h += '<div class="sub">No hubo regalos este mes.</div>';
+  h += '</div>';
+
+  h += '<h2>Clientes de mayoreo</h2><div class="tarjeta">';
+  if (g.clientes.length) {
+    h += '<table><tr><th>Cliente</th><th class="n">Compró</th><th class="n">Descuento</th></tr>';
+    g.clientes.forEach(function (c) { h += '<tr><td>' + esc(c.nombre) + '<div class="sub">' + esc(c.codigo) + ' · ' + c.tickets + ' compra(s)</div></td><td class="n">' + dinero(c.compras) + '</td><td class="n">' + dinero(c.descuento) + '</td></tr>'; });
+    h += '</table>';
+  } else h += '<div class="sub">Ningún cliente de mayoreo compró este mes.</div>';
+  h += '</div>';
+
+  if (g.top.length) {
+    h += '<h2>Lo más vendido</h2><div class="tarjeta"><table>';
+    g.top.forEach(function (p, i) { h += '<tr><td>' + (i + 1) + '. ' + esc(p.nombre) + '</td><td class="n sub">' + p.piezas + ' pza</td><td class="n">' + dinero(p.ventas) + '</td></tr>'; });
+    h += '</table></div>';
+  }
+  var max = 1;
+  g.historico.forEach(function (m) { if (m.ganancia > max) max = m.ganancia; });
+  h += '<h2>Ganancia últimos 6 meses</h2><div class="tarjeta"><div class="barras">';
+  g.historico.forEach(function (m) {
+    var n = Number(m.mes.slice(5)) - 1;
+    h += '<div class="' + (m.mes === g.mes ? 'on' : '') + '"><span>' + (m.ganancia ? dinero(m.ganancia).replace('.00', '') : '') + '</span><i style="height:' + Math.max(2, Math.round(Math.max(0, m.ganancia) / max * 90)) + '%"></i>' + MESES[n] + '</div>';
+  });
+  h += '</div></div>';
+  $('app').innerHTML = h;
+}
+
+/* =========================================================
+   FARMACIAS (links para WhatsApp, solo dueno)
+   ========================================================= */
+function cargarFarmacias() {
+  $('app').innerHTML = '<div class="cargando">Cargando…</div>';
+  llamar('api_links', [S.ses, (window.BASE_PAGINA || '')], function (ls) {
+    var h = '<div class="cab"><div class="marca"><div class="logo">+</div><div><h1>Farmacias</h1><div class="sub">Link de cada farmacia</div></div></div></div>' +
+      '<div class="sub" style="margin-bottom:10px">Cada farmacia solo ve su sucursal: vender, inventario, por caducar y traslados. No ve ganancias ni costos.</div><div class="lista">';
+    ls.forEach(function (f) {
+      h += '<div class="tarjeta"><b>' + esc(f.nombre) + '</b> <span class="sub">' + esc(f.id) + '</span>' +
+        '<div class="sub">' + (f.correo ? 'Aviso de caducidad a: ' + esc(f.correo) : 'Sin correo (no recibe aviso)') + '</div>' +
+        '<div class="rej" style="margin-top:10px"><a class="btn wa" href="' + esc(f.wa) + '" target="_blank">Mandar por WhatsApp</a>' +
+        '<button class="sec" onclick="copiar(\'' + esc(f.link) + '\')">Copiar link</button></div></div>';
+    });
+    h += '</div><h2>¿Cómo agrego cosas?</h2><div class="tarjeta sub">Todo se edita en la hoja de Google:<br>' +
+      '<b>Farmacias</b>: una fila por sucursal (el link se crea solo).<br><b>Catalogo</b>: pega tu lista de medicamentos completa.<br>' +
+      '<b>Promociones</b>: medicamento, compra, regalo (2 y 1 = 2+1), farmacia o Todas, fechas.<br>' +
+      '<b>Clientes</b>: código, nombre y % de descuento de mayoreo.</div>' +
+      '<button class="volver" style="margin-top:16px" onclick="salir()">Cerrar sesión</button>';
+    $('app').innerHTML = h;
+  });
+}
+function copiar(l) {
+  function respaldo() { prompt('Copia este link:', l); }
+  try { navigator.clipboard.writeText(l).then(function () { aviso('Link copiado'); }, respaldo); } catch (e) { respaldo(); }
+}
+
+/* ---------- arranque ---------- */
+window.onerror = function (m) { aviso('Error: ' + m); };
+function arrancar(p) {
+  p = p || {};
+  if (p.f && p.k) { entrar({ f: p.f, k: p.k }); return; }
+  google.script.run.withSuccessHandler(function (r) {
+    S.negocio = r.negocio;
+    var pin = leerLocal(CONFIG.LLAVE_PIN);
+    if (pin) entrar({ pin: pin }, true); else pantallaPin();
+  }).withFailureHandler(function () { pantallaPin(); }).api_publico();
+}
+if (window.google && google.script && google.script.url) {
+  google.script.url.getLocation(function (loc) { arrancar(loc.parameter); });
+} else {
+  arrancar({});
+}
+</script>
+</body>
+</html>
