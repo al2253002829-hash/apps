@@ -80,7 +80,7 @@ var URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbxuBTWvEuc3JVEIIp
       withSuccessHandler: function (f) { ok = f; return obj; },
       withFailureHandler: function (f) { ko = f; return obj; }
     };
-    ['api_inicio', 'api_horarios', 'api_reservar', 'api_miCita', 'api_cancelarCliente', 'api_entrar', 'api_agenda', 'api_marcar', 'api_eliminar', 'api_nuevaManual'].forEach(function (fn) {
+    ['api_inicio', 'api_horarios', 'api_reservar', 'api_miCita', 'api_cancelarCliente', 'api_entrar', 'api_salir', 'api_agenda', 'api_marcar', 'api_eliminar', 'api_nuevaManual'].forEach(function (fn) {
       obj[fn] = function () {
         var args = Array.prototype.slice.call(arguments);
         fetch(URL_APPS_SCRIPT, {
@@ -237,7 +237,7 @@ function pantallaPin(msg) {
 function entrar(pin, auto) {
   if ($('bpin')) $('bpin').disabled = true;
   google.script.run.withSuccessHandler(function (d) {
-    A.pin = pin; guardarLocal('barb_pin', pin); D = d; A.agenda = d.agenda; A.fecha = d.agenda.fecha; pintarPanel();
+    A.pin = d.token || pin; guardarLocal('barb_pin', A.pin); D = d; A.agenda = d.agenda; A.fecha = d.agenda.fecha; pintarPanel();
   }).withFailureHandler(function (e) {
     guardarLocal('barb_pin', ''); pantallaPin(auto ? '' : (e && e.message ? e.message : 'No se pudo entrar'));
   }).api_entrar(pin);

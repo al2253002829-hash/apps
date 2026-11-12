@@ -133,7 +133,7 @@ window.BASE_PAGINA = location.origin + location.pathname;
       withSuccessHandler: function (f) { ok = f; return obj; },
       withFailureHandler: function (f) { ko = f; return obj; }
     };
-    ['api_publico', 'api_entrar', 'api_cultivos', 'api_detalle', 'api_nuevo_cultivo', 'api_estado', 'api_gasto', 'api_cosecha', 'api_venta', 'api_pagado', 'api_ventas', 'api_resumen', 'api_ajustes', 'api_parcela', 'api_encargado'].forEach(function (fn) {
+    ['api_publico', 'api_entrar', 'api_salir', 'api_cultivos', 'api_detalle', 'api_nuevo_cultivo', 'api_estado', 'api_gasto', 'api_cosecha', 'api_venta', 'api_pagado', 'api_ventas', 'api_resumen', 'api_ajustes', 'api_parcela', 'api_encargado'].forEach(function (fn) {
       obj[fn] = function () {
         var args = Array.prototype.slice.call(arguments);
         fetch(URL_APPS_SCRIPT, {
@@ -240,6 +240,7 @@ function pantallaPin(msg) {
 function entrar(ses, auto) {
   if ($('bpin')) $('bpin').disabled = true;
   google.script.run.withSuccessHandler(function (r) {
+    if (ses.pin && r.token) ses = { pin: r.token };
     S.ses = ses; S.d = r;
     if (ses.pin) guardarLocal(CONFIG.LLAVE_PIN, ses.pin);
     S.mes = mesActual();
@@ -250,7 +251,7 @@ function entrar(ses, auto) {
     else $('app').innerHTML = '<div class="vacio">' + esc(m) + '</div>';
   }).api_entrar(ses);
 }
-function salir() { guardarLocal(CONFIG.LLAVE_PIN, ''); S.ses = null; S.d = null; pantallaPin(); }
+function salir() { if (S.ses && S.ses.pin) google.script.run.api_salir(S.ses.pin); guardarLocal(CONFIG.LLAVE_PIN, ''); S.ses = null; S.d = null; pantallaPin(); }
 
 /** Vuelve a pedir los datos (despues de guardar algo). */
 function refrescar(cb) {

@@ -100,7 +100,7 @@ var URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbwZJg7aur0KeT5Sbd
       withSuccessHandler: function (f) { ok = f; return obj; },
       withFailureHandler: function (f) { ko = f; return obj; }
     };
-    ['api_publico', 'api_entrar', 'api_listar', 'api_crear', 'api_orden', 'api_presupuesto',
+    ['api_publico', 'api_entrar', 'api_salir', 'api_listar', 'api_crear', 'api_orden', 'api_presupuesto',
      'api_estado', 'api_notas', 'api_cliente', 'api_responder'].forEach(function (fn) {
       obj[fn] = function () {
         var args = Array.prototype.slice.call(arguments);
@@ -269,7 +269,7 @@ function pantallaPin(msg) {
 function entrar(pin, auto) {
   if (!auto && $('bpin')) $('bpin').disabled = true;
   google.script.run.withSuccessHandler(function (r) {
-    S.pin = pin; guardarLocal('taller_pin', pin);
+    S.pin = r.token || pin; guardarLocal('taller_pin', S.pin);
     S.ajustes = r.ajustes; S.catalogo = r.catalogo; S.ordenes = r.ordenes;
     pintarLista();
   }).withFailureHandler(function (e) {
@@ -314,7 +314,7 @@ function pintarLista() {
   h += '</div><button class="volver" onclick="salir()">Cerrar sesión</button>';
   $('app').innerHTML = h;
 }
-function salir() { guardarLocal('taller_pin', ''); S.pin = ''; pantallaPin(); }
+function salir() { if (S.pin) google.script.run.api_salir(S.pin); guardarLocal('taller_pin', ''); S.pin = ''; pantallaPin(); }
 
 function opciones(lista, sel) {
   return lista.map(function (x) { return '<option' + (x === sel ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('');
